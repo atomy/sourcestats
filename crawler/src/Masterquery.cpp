@@ -33,7 +33,7 @@ void Masterquery::Exec( void )
     servAddr2Ip( strIp, 16, masterAddr );
     servAddr2Port( strPort, 8, masterAddr );
 #ifdef DEBUG
-    std::cout << "Masterquery::Exec() requesting gameserver for game '" << gameName << "' -- using master server '" << strIp << ":" << strPort << "'" << endl;
+    std::cout << "Masterquery::Exec() requesting gameserver for game '" << gameName << "' -- using master server '" << strIp << ":" << strPort << "'" << std::endl;
 #endif
     Query();
 }
@@ -126,7 +126,7 @@ servAddr Masterquery::RequestMore( udp::socket* socket, servAddr gIp )
     char queryString[256];
     snprintf(sQuery, 256, "1" "\xFF" "%u.%u.%u.%u:%u" "\x00" "\\gamedir\\%s\\napp\\500" "\x00", gIp.ip1, gIp.ip2, gIp.ip3, gIp.ip4, gIp.port, gameName);
 #ifdef DEBUG
-    std::cout << "Masterquery::RequestMore() querying " << ip << ":" << port << "with string: " << queryString << endl;
+    std::cout << "Masterquery::RequestMore() querying " << ip << ":" << port << "with string: " << queryString << std::endl;
 #endif
     boost::asio::io_service io_service;
 
@@ -172,7 +172,7 @@ void Masterquery::Query( void )
         char queryString[256];
         snprintf( queryString, 256, "1%c0.0.0.0:0%c\\gamedir\\%s\\napp\\500%c", 255, 0 ,gameName, 0 );
 #ifdef DEBUG
-        std::cout << "Masterquery::Query() querying " << ip << ":" << port << " with string: " << queryString << endl;
+        std::cout << "Masterquery::Query() querying " << ip << ":" << port << " with string: " << queryString << std::endl;
 #endif
         socket.send_to(boost::asio::buffer(queryString), receiver_endpoint);
 
@@ -222,6 +222,7 @@ void Masterquery::Query( void )
     }
 }
 
+// we are done getting servers, let dad know!
 void Masterquery::Finished( void )
 {
 	m_pParent->MasterqueryDoneCallback();
@@ -232,7 +233,7 @@ void Masterquery::AddEntry( GameserverEntry* pEntry )
     char output[128];
     servAddr2String( output, 128, pEntry->GetAddr() );
 #ifdef DEBUG
-    std::cout << "Masterquery::AddEntry() added new entry with address: " << output << endl;
+    std::cout << "Masterquery::AddEntry() added new entry with address: " << output << std::endl;
 #endif
 
     m_vResultlist.push_back( pEntry );
@@ -248,7 +249,7 @@ GameserverEntry* Masterquery::GetNextServer( void )
     if ( m_vResultlist.size() <= 0 )
     {
 #ifdef DEBUG
-        std::cerr << "Masterquery::GetNextServer() error, list is empty!" << endl;
+        std::cerr << "Masterquery::GetNextServer() error, list is empty!" << std::endl;
 #endif
     }
 
@@ -259,4 +260,9 @@ GameserverEntry* Masterquery::GetNextServer( void )
     m_geIT++;
 
     return gEntry;
+}
+
+void Masterquery::SetParent( GameStats* pStats )
+{
+	m_pParent = pStats;
 }

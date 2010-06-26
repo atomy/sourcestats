@@ -6,7 +6,7 @@
 ThreadedRequest::ThreadedRequest( void )
 {
     m_iState = STATE_NEW;
-	m_tStartTime = time();
+	m_tStartTime = time(NULL);
 }
 
 void ThreadedRequest::InitThread( void )

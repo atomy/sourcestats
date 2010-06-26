@@ -9,9 +9,9 @@
 #include "errno.h"
 #include "GameStats.h"
 
-static GameserverManager* gGSManager = GameserverManager::getInstance();
+//static GameserverManager* gGSManager = GameserverManager::getInstance();
 static MasterserverManager* gMasterManager = MasterserverManager::getInstance();
-static MasterqueryManager* gMasterqueryManager = MasterqueryManager::getInstance();
+//static MasterqueryManager* gMasterqueryManager = MasterqueryManager::getInstance();
 
 SourceStats* SourceStats::gSourceStats = NULL;
 
@@ -47,64 +47,68 @@ void SourceStats::Init( void )
 	pthread_t tThread;
 	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, "dystopia" );
 	int ret = pthread_create( &tThread, NULL, SourceStats::ThreadGameStats, pThreadArgs );
-	AddThread( tThread );
 }
 
 void* SourceStats::ThreadGameStats( void *arg )
 {
     MMThreadArgs* pArgs = (MMThreadArgs*)arg;
-	SourceStats* pParent = pArgs->GetParent();
-	char* gameName = pArgs->GetName();
+	SourceStats* pThis = pArgs->GetParent();
+	char* gameName = pArgs->GetGameName();
 
     GameStats* pGStats = new GameStats( gameName );
-	pParent->AddGameStats( pGStats );
+	pGStats->InitThread();
+	pThis->AddGameStats( pGStats );
+	pThis->AddThread( pGStats );
 	pGStats->Exec();
 }
 
 void SourceStats::AddGameStats( GameStats* pStats )
 {
+	// TODO, lock
 	 m_vGameStats.push_back( pStats );
+	 // TODO, unlock
 }
 
-void SourceStats::CheckFinishedMasterQueries( void )
-{
-#ifdef DEBUG
-    std::cout << "SourceStats::CheckFinishedResults() Iterating finished results..." << std::endl;
-#endif
-
-    gMasterqueryManager->ResetIterator();
-
-    for ( Masterquery* mQuery = gMasterqueryManager->GetFinishedQuery(); mQuery; mQuery = gMasterqueryManager->GetFinishedQuery() )
-    {
-#ifdef DEBUG
-        std::cout << "SourceStats::CheckFinishedResults() Found a finished Masterquery result!" << std::endl;
-#endif
-        mQuery->ResetIterator();
-        for ( GameserverEntry* mEntry = mQuery->GetNextServer(); mEntry; mEntry = mQuery->GetNextServer() )
-        {
-            gGSManager->AddEntry( mEntry );
-        }
-    }
-#ifdef DEBUG
-    std::cout << "SourceStats::CheckFinishedResults() Sending out AS_INFOs to all known gameservers..." << endl;
-#endif
-    gGSManager->RequestAllServInfo();
-}
+//void SourceStats::CheckFinishedMasterQueries( void )
+//{
+//#ifdef DEBUG
+//    std::cout << "SourceStats::CheckFinishedResults() Iterating finished results..." << std::endl;
+//#endif
+//
+//    gMasterqueryManager->ResetIterator();
+//
+//    for ( Masterquery* mQuery = gMasterqueryManager->GetFinishedQuery(); mQuery; mQuery = gMasterqueryManager->GetFinishedQuery() )
+//    {
+//#ifdef DEBUG
+//        std::cout << "SourceStats::CheckFinishedResults() Found a finished Masterquery result!" << std::endl;
+//#endif
+//        mQuery->ResetIterator();
+//        for ( GameserverEntry* mEntry = mQuery->GetNextServer(); mEntry; mEntry = mQuery->GetNextServer() )
+//        {
+//            gGSManager->AddEntry( mEntry );
+//        }
+//    }
+//#ifdef DEBUG
+//    std::cout << "SourceStats::CheckFinishedResults() Sending out AS_INFOs to all known gameservers..." << endl;
+//#endif
+//    gGSManager->RequestAllServInfo();
+//}
 
 void SourceStats::CheckFinishedGamestats( void )
 {
-#ifdef DEBUG
-    std::cout << "CheckFinishedGamestats() Looking for finished GameInfoRequests..." << endl;
-#endif
-
-    gGSManager->ResetIterator();
-    for ( GameInfoRequest* pGIRequest = gGSManager->GetFinishedQuery(); pGIRequest; pGIRequest = gGSManager->GetFinishedQuery() )
-    {
-        GameserverInfo* pGSInfo = pGIRequest->GetGSInfo();
-#ifdef DEBUG
-        printf( "CheckFinishedGamestats() Got Result! servername: %s -- %d/%d\n", pGSInfo->m_sServername.c_str(), pGSInfo->m_cPlayercount, pGSInfo->m_cMaxplayers );
-#endif
-    }
+	// TODO, check for finished GameStats() objects!
+//#ifdef DEBUG
+//    std::cout << "CheckFinishedGamestats() Looking for finished GameInfoRequests..." << endl;
+//#endif
+//
+//    gGSManager->ResetIterator();
+//    for ( GameInfoRequest* pGIRequest = gGSManager->GetFinishedQuery(); pGIRequest; pGIRequest = gGSManager->GetFinishedQuery() )
+//    {
+//        GameserverInfo* pGSInfo = pGIRequest->GetGSInfo();
+//#ifdef DEBUG
+//        printf( "CheckFinishedGamestats() Got Result! servername: %s -- %d/%d\n", pGSInfo->m_sServername.c_str(), pGSInfo->m_cPlayercount, pGSInfo->m_cMaxplayers );
+//#endif
+//    }
 }
 
 void SourceStats::Loop( void )
@@ -112,10 +116,10 @@ void SourceStats::Loop( void )
     while ( true )
     {
         CheckThreads();				// for stats only, check for finished threads
-        CheckFinishedMasterQueries();		// check for finished results and do a AS_INFO for those
+        //CheckFinishedMasterQueries();		// check for finished results and do a AS_INFO for those
         CheckFinishedGamestats();		// check for finished as_info results
 #ifdef DEBUG
-        std::cout << "SourceStats::Loop() active threads: " << m_vThreads.size() << std::endl;
+        std::cout << "SourceStats::Loop() active threads: " << GetActiveThreadNo() << std::endl;
 #endif
         sleep( 2 );
     }

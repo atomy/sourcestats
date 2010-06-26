@@ -13,8 +13,8 @@ private:
 
 	static MasterserverManager* gMasterserverManager;
 
-	vector <Masterserver*> m_vMasterserverList;
-	//vector <GameserverInfo*> m_vServerInfos;
+	std::vector <Masterserver*> m_vMasterserverList;
+	//std::vector <GameserverInfo*> m_vServerInfos;
 
 	//static void CleanupServerInfos( void );
 	//void RequestServInfo( servAddr );

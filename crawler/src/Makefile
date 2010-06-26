@@ -1,5 +1,5 @@
 OUTBIN = sourcestats
-OBJ = GameInfoRequest.o GameserverEntry.o GameserverInfo.o GameserverManager.o Masterquery.o MasterqueryManager.o Masterserver.o MasterserverManager.o SourceStats.o util.o main.o GameStats.o ThreadedRequest.o
+OBJ = GameInfoRequest.o GameserverEntry.o GameserverInfo.o GameserverManager.o Masterquery.o MasterqueryManager.o Masterserver.o MasterserverManager.o SourceStats.o util.o main.o GameStats.o ThreadedRequest.o ThreadFactory.o GameInfoQuery.o
 
 default: all
 

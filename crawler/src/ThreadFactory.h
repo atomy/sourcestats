@@ -20,7 +20,7 @@ public:
 	void						RemoveThread( ThreadedRequest* pThread );
 
 private:
-	vector<ThreadedRequest*>	m_vThreads;
+	std::vector<ThreadedRequest*>	m_vThreads;
 };
 
 #endif // THREADFACTORY_H

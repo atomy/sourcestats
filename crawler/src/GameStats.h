@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <vector>
 #include <time.h>
+#include <string.h>
 #include <map>
-#include "Masterquery.h"
+//#include "Masterquery.h"
 #include "ThreadFactory.h"
 
+class Masterquery;
 
 class GameStats : public ThreadedRequest, public ThreadFactory
 {
@@ -24,6 +26,7 @@ public:
 	void			MasterqueryDoneCallback( void );
 	void			GameInfoDoneCallback( void );
 	void			ProgressInfoResults( void );
+	void			AddInfoQuery( GameInfoQuery* );
 
 	static void*	ThreadMasterQuery( void *arg );
 	static void*	ThreadInfoQuery( void *arg );
@@ -38,7 +41,7 @@ private:
     Masterquery*	m_pMasterquery;
     time_t			m_tMasterqueryStartTime;
 
-	vector<GameInfoQuery*> m_vGameInfoQueries;
+	std::vector<GameInfoQuery*> m_vGameInfoQueries;
 
     class MMThreadArgs
     {

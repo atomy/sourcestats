@@ -29,22 +29,22 @@ void GameStats::Exec( void )
 void GameStats::CreateMasterqueryWorker( void )
 {
 	pthread_t tThread;
-	MMThreadArgs2* pThreadArgs = new MMThreadArgs2( this, "dystopia" );
+	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, "dystopia" );
 	int ret = pthread_create( &tThread, NULL, GameStats::ThreadMasterQuery, pThreadArgs );
 }
 
 void* GameStats::ThreadMasterQuery( void *arg )
 {
     MMThreadArgs* pArgs = (MMThreadArgs*)arg;
-	GameStats* pParent = pArgs->GetParent();
-	char* gameName = pArgs->GetName();
-
-	pParent->InitThread( this );
-	pParent->AddThread( this );
+	GameStats* pThis = pArgs->GetObj();
+	char* gameName = pArgs->GetGameName();
 
     Masterquery* pQuery = new Masterquery();
+	pThis->InitThread();
+	pThis->AddThread( pQuery );
 	pQuery->SetTimeout( 30 );							// set thread timeout to 30 seconds
-	pParent->SetMasterquery( pQuery );
+	pQuery->SetParent( pThis );
+	pThis->SetMasterquery( pQuery );
 	pQuery->SetGame( gameName );
 	pQuery->Exec();
 }
@@ -61,27 +61,28 @@ void GameStats::GameInfoDoneCallback()
 
 void GameStats::ProgressInfoResults( void )
 {
-	vector <GameInfoQuery*>::iterator it;
-
-	for( it = m_vGameInfoQueries.begin(); it < m_vGameInfoQueries.end(); it++ )
-	{
-		GameInfoQuery* pQuery = (*it);
-		if ( pQuery->GetStatus() == STATE_DONE )
-		{
-			GamserverInfo* gInfo = pQuery->GetGSInfo();
-#ifdef DEBUG
-			cout << "GameStats::ProgressInfoResults() found completed info result for server '" << gInfo->m_sServername << "'" << endl;
-#endif
-		}
-		else
-		{
-#ifdef DEBUG
-			cout << "GameStats::ProgressInfoResults() found result but wasnt completed in time, skipping..." << endl;
-#endif
-		}
-	}
+//	vector <GameInfoQuery*>::iterator it;
+//
+//	for( it = m_vGameInfoQueries.begin(); it < m_vGameInfoQueries.end(); it++ )
+//	{
+//		GameInfoQuery* pQuery = (*it);
+//		if ( pQuery->GetStatus() == STATE_DONE )
+//		{
+//			GamserverInfo* gInfo = pQuery->GetGSInfo();
+//#ifdef DEBUG
+//			cout << "GameStats::ProgressInfoResults() found completed info result for server '" << gInfo->m_sServername << "'" << endl;
+//#endif
+//		}
+//		else
+//		{
+//#ifdef DEBUG
+//			cout << "GameStats::ProgressInfoResults() found result but wasnt completed in time, skipping..." << endl;
+//#endif
+//		}
+//	}
 }
 
+// child finished getting servers, lets spawn workers for retrieve AS_INFO for every server entry
 void GameStats::MasterqueryDoneCallback()
 {
 	CreateGameInfoWorker();
@@ -99,6 +100,7 @@ void GameStats::AddInfoQuery( GameInfoQuery* pQuery )
 	// TODO, unlock
 }
 
+// spawning threads for retrieving AS_INFO for all gameserver entries
 void GameStats::CreateGameInfoWorker( void )
 {
 	if ( m_pMasterquery->GetStatus() != STATE_DONE )
@@ -111,10 +113,10 @@ void GameStats::CreateGameInfoWorker( void )
 	m_pInfoRunning = 0;
 	m_pMasterquery->ResetIterator();
 
-	for( GameserverEntry* pEntry = m_pMasterquery->GetNextServer(); pEntry; pEntry = m_pMasterquery->GetNextServer(); )
+	for( GameserverEntry* pEntry = m_pMasterquery->GetNextServer(); pEntry; pEntry = m_pMasterquery->GetNextServer() )
 	{
 		pthread_t tThread;
-		MMThreadArgs* pThreadArgs = new MMThreadArgs( this, pEntry->GetAddr() );
+		MMThreadArgs2* pThreadArgs = new MMThreadArgs2( this, pEntry->GetAddr() );
 		int ret = pthread_create( &tThread, NULL, GameStats::ThreadMasterQuery, pThreadArgs );
 		m_pInfoRunning++;
 	}
@@ -123,13 +125,12 @@ void GameStats::CreateGameInfoWorker( void )
 void* GameStats::ThreadInfoQuery( void *arg )
 {
     MMThreadArgs2* pArgs = (MMThreadArgs2*)arg;
-	GameStats* pParent = pArgs->GetParent();
+	GameStats* pParent = pArgs->GetObj();
 	servAddr stAddr = pArgs->GetAddr();
 
-	pParent->InitThread( this );
-	pParent->AddThread( this );
-
-    GameserverInfoQuery* pQuery = new GameserverInfoQuery( stAddr );
+    GameInfoQuery* pQuery = new GameInfoQuery( stAddr );
+	pQuery->InitThread();
+	pParent->AddThread( pQuery );
 	pQuery->SetTimeout( 30 );							// set thread timeout to 30 seconds
 	pParent->AddInfoQuery( pQuery );
 	pQuery->Exec();

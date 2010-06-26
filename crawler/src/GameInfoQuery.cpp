@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include <string>
 #include "const.h"
+#include "GameStats.h"
 
 using boost::asio::ip::udp;
 

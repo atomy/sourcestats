@@ -1,7 +1,7 @@
 #include "ThreadFactory.h"
-#include <stdio>
+#include <stdio.h>
+#include <iostream>
 
-using namespace std;
 
 void ThreadFactory::RemoveThread( ThreadedRequest* pThread )
 {
@@ -16,21 +16,21 @@ void ThreadFactory::AddThread( ThreadedRequest* pThread )
 
 void ThreadFactory::CheckThreads( void )
 {
-	vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
+	std::vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
 
-	while ( it < m_vThreads.end(); )
+	while ( it < m_vThreads.end() )
 	{
 		ThreadedRequest* pThread = (*it);
 
-		if ( pThread->GetStartTime() + pThread->GetTimeout() < time() )
+		if ( pThread->GetStartTime() + pThread->GetTimeout() < time(NULL) )
 		{
-			int ret = pthread_cancel( pThread->GetThreadId() )
+			int ret = pthread_cancel( pThread->GetThreadId() );
 			
 			if ( ret != 0 )
-				cerr << "ThreadFactory::CheckThreads() ERROR while trying to cancel thread '" << pThread->GetThreadId() << "'" << endl;
+				std::cerr << "ThreadFactory::CheckThreads() ERROR while trying to cancel thread '" << pThread->GetThreadId() << "'" << std::endl;
 #ifdef DEBUG
 			else
-				cout << "ThreadFactory::CheckThreads() thread '" << pThread->GetThreadId() << "' has been cancelled due timeout" << endl;
+				std::cout << "ThreadFactory::CheckThreads() thread '" << pThread->GetThreadId() << "' has been cancelled due timeout" << std::endl;
 #endif
 			 it = m_vThreads.erase( it );
 		}

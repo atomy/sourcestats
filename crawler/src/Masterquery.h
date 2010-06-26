@@ -9,7 +9,7 @@
 #include "ThreadedRequest.h"
 #include "SourceStats.h"
 
-
+// this class is responsible for getting all servers for the given game
 class Masterquery : public ThreadedRequest
 {
 public:
@@ -24,6 +24,7 @@ public:
 	query_state			GetStatus( void ) { return m_iState; }
 	void				ResetIterator( void );
 	GameserverEntry*	GetNextServer( void );
+	void				SetParent( GameStats* );
 
 protected:
 	servAddr			RequestMore( boost::asio::ip::udp::socket* socket, servAddr gIp );
@@ -37,10 +38,10 @@ private:
 	char				gameName[128];
 	servAddr			masterAddr;
 	query_state			m_iState;
-	GameserverEntry*	m_pParent;
+	GameStats*			m_pParent;
 
-	vector <GameserverEntry*>			m_vResultlist;
-	vector <GameserverEntry*>::iterator m_geIT;
+	std::vector <GameserverEntry*>			m_vResultlist;
+	std::vector <GameserverEntry*>::iterator m_geIT;
 };
 
 #endif // MASTERQUERY_H

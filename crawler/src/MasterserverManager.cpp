@@ -39,7 +39,7 @@ void MasterserverManager::AddServer( Masterserver* mServer )
 {
 	char servString[128];
 	servAddr2String( servString, 128, mServer->getAddr() );
-	std::cout << "MasterserverManager::AddServer() added new master server: " << servString << endl;
+	std::cout << "MasterserverManager::AddServer() added new master server: " << servString << std::endl;
 
 	m_vMasterserverList.push_back(mServer);
 }

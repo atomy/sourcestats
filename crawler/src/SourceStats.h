@@ -29,9 +29,10 @@ public:
     void					Loop( void );
     void					CheckFinishedMasterQueries( void );
     void					CheckFinishedGamestats( void );
+	void					AddGameStats( GameStats* );
 
 private:
-    vector <GameStats*>		m_vGameStats;
+    std::vector <GameStats*>		m_vGameStats;
 
     class MMThreadArgs
     {

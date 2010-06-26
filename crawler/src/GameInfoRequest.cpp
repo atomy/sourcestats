@@ -10,7 +10,6 @@
 
 using boost::asio::ip::udp;
 
-static GameserverManager* gGameserverManager = GameserverManager::getInstance();
 
 GameInfoRequest::GameInfoRequest( servAddr sAddr )
 {
