@@ -3,14 +3,30 @@
 
 #include <stdio.h>
 
-enum query_state
+enum giQuery_state
 {
-	STATE_NONE = 0,
-	STATE_NEW,
-	STATE_INPROGRESS,
-	STATE_WAITINGFORREPLY,
-	STATE_DONE,
-	STATE_FAILED
+	GISTATE_NONE = 0,
+	GISTATE_NEW,
+	GISTATE_INPROGRESS,
+	GISTATE_WAITINGFORREPLY,
+	GISTATE_DONE,
+	GISTATE_FAILED
+};
+
+enum gsQuery_state
+{
+	GSSTATE_NONE = 0,
+	GSSTATE_NEW,
+	GSSTATE_WAITINGMASTERQ,
+	GSSTATE_WAITINGASINFOWORKERS,
+	GSSTATE_DONE
+};
+
+enum mqQuery_state
+{
+	MQSTATE_NONE = 0,
+    MQSTATE_NEW,
+	MQSTATE_DONE
 };
 
 /**
@@ -29,7 +45,7 @@ enum query_state
  * OS   byte    Host operating system. 'l' for Linux, 'w' for Windows
  * Password     byte    If set to 0x01, a password is required to join this server
  * Secure   byte    if set to 0x01, this server is VAC secured
- * Game Version     string  The version of the game, eg: "1.0.0.22" 
+ * Game Version     string  The version of the game, eg: "1.0.0.22"
  */
 
 struct as_info

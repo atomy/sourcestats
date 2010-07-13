@@ -8,15 +8,28 @@
 #define FINGERPRINT_SIZE 6
 
 using boost::asio::ip::udp;
+extern pthread_mutex_t muLog;
 
-
-Masterquery::Masterquery()
+Masterquery::Masterquery( ThreadFactory* pFactory ) : ThreadedRequest( pFactory )
 {
-    m_iState = STATE_NEW;
+    m_iState = MQSTATE_NEW;
+	SetParentClassName( "Masterquery" );
+}
+
+Masterquery::~Masterquery()
+{
 }
 
 void Masterquery::SetMaster( servAddr mAddr )
 {
+    char strIp[16];
+    char strPort[8];
+	char logout[128];
+
+    servAddr2Ip( strIp, 16, mAddr );
+    servAddr2Port( strPort, 8, mAddr );
+	snprintf(logout, 128, "Masterquery::SetMaster() setting master server to '%s:%s'", strIp, strPort);
+    Log(logout);
     masterAddr = mAddr;
 }
 
@@ -29,20 +42,22 @@ void Masterquery::Exec( void )
 {
     char strIp[16];
     char strPort[8];
+	char logout[128];
 
     servAddr2Ip( strIp, 16, masterAddr );
     servAddr2Port( strPort, 8, masterAddr );
-#ifdef DEBUG
-    std::cout << "Masterquery::Exec() requesting gameserver for game '" << gameName << "' -- using master server '" << strIp << ":" << strPort << "'" << std::endl;
-#endif
+	snprintf(logout, 128, "Masterquery::Exec() requesting gameserver for game '%s' -- using master server '%s:%s'", gameName, strIp, strPort);
+    Log(logout);
     Query();
+}
+
+void Masterquery::EntryPoint( void )
+{
+	ThreadedRequest::EntryPoint();
 }
 
 servAddr Masterquery::ParseMasterReply(const char* recvData, size_t len)
 {
-#ifdef DEBUG
-    std::cout << "Masterquery::ParseMasterReply() len: " << len << std::endl;
-#endif
     size_t read = 0;
     servAddr nullAddr;
     nullAddr.ip1 = 0;
@@ -62,7 +77,8 @@ servAddr Masterquery::ParseMasterReply(const char* recvData, size_t len)
         char sServAddr[128];
         servAddr2String(sServAddr, 128, masterAddr );
 	#ifdef DEBUG
-        fprintf(stderr, "Masterquery::ParseMasterReply() invalid fingerprint received while querying: %s for game %s\n", sServAddr, gameName);
+	//std::cout << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "]
+        fprintf(stderr, "[%d][THREAD|%d] Masterquery::ParseMasterReply() invalid fingerprint received while querying: %s for game %s\n", (int)time(NULL), (int)GetThreadId(), sServAddr, gameName);
 	#endif
 
         return nullAddr;
@@ -98,7 +114,7 @@ servAddr Masterquery::ParseMasterReply(const char* recvData, size_t len)
         // check for end of list, the master server returns 0.0.0.0:0 as address on EOF
         if ( lastGameAddr.ip1 == 0 && lastGameAddr.ip2 == 0 && lastGameAddr.ip3 == 0 && lastGameAddr.ip4 == 0 || lastGameAddr.port == 0 )
         {
-            printf("Masterquery::ParseMasterReply() EOF received, giving up!\n");
+            Log("Masterquery::ParseMasterReply() EOF received, giving up!");
             return lastGameAddr;
         }
         entryLen = read - readStart;
@@ -115,19 +131,19 @@ servAddr Masterquery::RequestMore( udp::socket* socket, servAddr gIp )
     char sQuery[32];
     char ip[16];
     char port[8];
+	char logout[128];
 
     servAddr2Ip( ip, 16, masterAddr );
     servAddr2Port( port, 8, masterAddr );
     servAddr2String( output, 128, gIp );
 
-#ifdef DEBUG
-    std::cout << "Masterquery::RequestMore() using seed " << output << std::endl;
-#endif
+	snprintf(logout, 128, "Masterquery::RequestMore() using seed %s", output);
+	Log(logout);
     char queryString[256];
     snprintf(sQuery, 256, "1" "\xFF" "%u.%u.%u.%u:%u" "\x00" "\\gamedir\\%s\\napp\\500" "\x00", gIp.ip1, gIp.ip2, gIp.ip3, gIp.ip4, gIp.port, gameName);
-#ifdef DEBUG
-    std::cout << "Masterquery::RequestMore() querying " << ip << ":" << port << "with string: " << queryString << std::endl;
-#endif
+	snprintf(logout, 128, "Masterquery::RequestMore() querying '%s:%s' with string: '%s'", ip, port, queryString);
+	Log(logout);
+
     boost::asio::io_service io_service;
 
     udp::resolver resolver(io_service);
@@ -139,9 +155,8 @@ servAddr Masterquery::RequestMore( udp::socket* socket, servAddr gIp )
 
     boost::array<char, 5120> recv_buf;
     udp::endpoint sender_endpoint;
-#ifdef DEBUG
-    std::cout << "Masterquery::RequestMore() waiting for reply(2)..." << std::endl;
-#endif
+
+	Log("Masterquery::RequestMore() waiting for reply(2)...");
     // wait for reply
     size_t len = socket->receive_from(
                      boost::asio::buffer(recv_buf), sender_endpoint);
@@ -170,99 +185,93 @@ void Masterquery::Query( void )
 
         // send 1:0.0.0.0:0 to retrieve all servers
         char queryString[256];
+		char logout[128];
         snprintf( queryString, 256, "1%c0.0.0.0:0%c\\gamedir\\%s\\napp\\500%c", 255, 0 ,gameName, 0 );
-#ifdef DEBUG
-        std::cout << "Masterquery::Query() querying " << ip << ":" << port << " with string: " << queryString << std::endl;
-#endif
+		snprintf(logout, 128, "Masterquery::Query() querying '%s:%s' with string: '%s'", ip, port, queryString);
+		Log(logout);
         socket.send_to(boost::asio::buffer(queryString), receiver_endpoint);
 
         boost::array<char, 5120> recv_buf;
         udp::endpoint sender_endpoint;
-#ifdef DEBUG
-        std::cout << "Masterquery::Query() waiting for reply..." << std::endl;
-#endif
+		Log("Masterquery::Query() waiting for reply...");
+
         // wait for reply
         size_t len = socket.receive_from(
                          boost::asio::buffer(recv_buf), sender_endpoint);
 
         servAddr gIp;
         gIp = ParseMasterReply(recv_buf.data(), len);
-#ifdef DEBUG
-        std::cout << "Masterquery::Query() parsed reply!" << std::endl;
-#endif
+		Log("Masterquery::Query() parsed reply!");
+
         int loops = 0;
         while ( gIp.ip1 != 0 || gIp.ip2 != 0 || gIp.ip3 != 0 || gIp.ip4 != 0 || gIp.port != 0 )
         {
             if ( loops >= 20 )
             {
-#ifdef DEBUG
-                std::cerr << "Masterquery::Query() hard break" << std::endl;
-#endif
+				Log("Masterquery::Query() hard break");
                 break;
             }
 
             loops++;
-#ifdef DEBUG
-            std::cout << "Masterquery::Query() requesting more..." << std::endl;
-#endif
+			Log("Masterquery::Query() requesting more...");
             exit(0);
             gIp = RequestMore(&socket, gIp);
         }
-#ifdef DEBUG
-        std::cout << "Masterquery::Query() EOF!" << std::endl;
-#endif
-        m_iState = STATE_DONE;
+		Log("Masterquery::Query() EOF!");
 		Finished();
     }
     catch (std::exception& e)
     {
-#ifdef DEBUG
-        std::cerr << "Masterquery::Query() exception raised: " << e.what() << std::endl;
-#endif
+		std::cerr << "[" << time(NULL) << "][THREAD|" << GetParentClassName() << "|" << GetThreadId() << "] Masterquery::Query() exception raised: " << e.what() << std::endl;
     }
 }
 
 // we are done getting servers, let dad know!
 void Masterquery::Finished( void )
 {
-	m_pParent->MasterqueryDoneCallback();
+    m_iState = MQSTATE_DONE;
+}
+
+// oh noooez :(
+void Masterquery::Die( void )
+{
+    ThreadExit();
 }
 
 void Masterquery::AddEntry( GameserverEntry* pEntry )
 {
     char output[128];
+	char logout[128];
     servAddr2String( output, 128, pEntry->GetAddr() );
-#ifdef DEBUG
-    std::cout << "Masterquery::AddEntry() added new entry with address: " << output << std::endl;
-#endif
+	snprintf(logout, 128, "Masterquery::AddEntry() added new entry with address: '%s'", output);
+    Log(logout); 
 
     m_vResultlist.push_back( pEntry );
 }
 
 void Masterquery::ResetIterator( void )
 {
+	Log("Masterquery::ResetIterator()");
     m_geIT = m_vResultlist.begin();
 }
 
 GameserverEntry* Masterquery::GetNextServer( void )
 {
     if ( m_vResultlist.size() <= 0 )
-    {
-#ifdef DEBUG
-        std::cerr << "Masterquery::GetNextServer() error, list is empty!" << std::endl;
-#endif
-    }
+		Log("Masterquery::GetNextServer() error, list is empty!");
 
-    if ( m_geIT == m_vResultlist.end() )
+	if ( m_geIT == m_vResultlist.end() )
         return NULL;
 
-    GameserverEntry* gEntry = (*m_geIT);
-    m_geIT++;
+	GameserverEntry* gEntry = (*m_geIT);
+	m_geIT++;
 
     return gEntry;
 }
 
-void Masterquery::SetParent( GameStats* pStats )
+void Masterquery::Log( const char* logMsg )
 {
-	m_pParent = pStats;
+    pthread_mutex_lock (&muLog);
+	std::cout << "[" << time(NULL) << "][THREAD:" << GetThreadId() << "|P:" << GetParentClassName() << "|G:" << gameName << "] "<< logMsg << std::endl;
+    pthread_mutex_unlock (&muLog);
 }

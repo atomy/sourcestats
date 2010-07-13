@@ -31,8 +31,6 @@ public:
 	std::string			m_sGameversion;
 
 public:
-	servAddr getAddr( void );
-
 	void SetType( unsigned char type ) { m_cType = type; }
 	void SetVersion( unsigned char version ) { m_cVersion = version; }
 	void SetServerName( std::string sname ) { m_sServername = sname; }

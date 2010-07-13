@@ -8,12 +8,22 @@
 #include "signal.h"
 #include "errno.h"
 #include "GameStats.h"
+#include "ThreadedRequest.h"
+
+#define TIMEOUT_GAMESTATS 30		// How long do we want to wait for the worker to complete ?
+
+using namespace std;
 
 //static GameserverManager* gGSManager = GameserverManager::getInstance();
 static MasterserverManager* gMasterManager = MasterserverManager::getInstance();
 //static MasterqueryManager* gMasterqueryManager = MasterqueryManager::getInstance();
 
 SourceStats* SourceStats::gSourceStats = NULL;
+
+SourceStats::SourceStats( void )
+{
+    SetParentClassName( "SourceStats" );
+}
 
 SourceStats* SourceStats::getInstance( void )
 {
@@ -32,17 +42,13 @@ void SourceStats::Destroy( void )
 
 void SourceStats::Init( void )
 {
-#ifdef DEBUG
-    std::cout << "SourceStats::main() Adding Masterservers..." << std::endl;
-#endif
+	Log("SourceStats::main() Adding Masterservers...");
 
     gMasterManager->AddServer( "216.207.205.99:27011" );
     gMasterManager->AddServer( "216.207.205.98:27011" );
 
-#ifdef DEBUG
-    std::cout << "SourceStats::main() Requesting GameServer for game dystopia..." << std::endl;
-    std::cout << "SourceStats::main() Creating worker for game dystopia..." << std::endl;
-#endif
+    Log("SourceStats::main() Requesting GameServer for game dystopia...");
+    Log("SourceStats::main() Creating worker for game dystopia...");
 
 	pthread_t tThread;
 	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, "dystopia" );
@@ -52,20 +58,19 @@ void SourceStats::Init( void )
 void* SourceStats::ThreadGameStats( void *arg )
 {
     MMThreadArgs* pArgs = (MMThreadArgs*)arg;
-	SourceStats* pThis = pArgs->GetParent();
+	SourceStats* pParent = pArgs->GetParent();
 	char* gameName = pArgs->GetGameName();
 
-    GameStats* pGStats = new GameStats( gameName );
-	pGStats->InitThread();
-	pThis->AddGameStats( pGStats );
-	pThis->AddThread( pGStats );
-	pGStats->Exec();
+    GameStats* pGStats = new GameStats( pParent, gameName );
+    pGStats->SetParentClassName( "GameStats" );
+	pGStats->SetTimeout( TIMEOUT_GAMESTATS );
+	pGStats->EntryPoint();
 }
 
 void SourceStats::AddGameStats( GameStats* pStats )
 {
 	// TODO, lock
-	 m_vGameStats.push_back( pStats );
+	 //m_vGameStats.push_back( pStats );
 	 // TODO, unlock
 }
 
@@ -96,19 +101,27 @@ void SourceStats::AddGameStats( GameStats* pStats )
 
 void SourceStats::CheckFinishedGamestats( void )
 {
-	// TODO, check for finished GameStats() objects!
-//#ifdef DEBUG
-//    std::cout << "CheckFinishedGamestats() Looking for finished GameInfoRequests..." << endl;
-//#endif
-//
-//    gGSManager->ResetIterator();
-//    for ( GameInfoRequest* pGIRequest = gGSManager->GetFinishedQuery(); pGIRequest; pGIRequest = gGSManager->GetFinishedQuery() )
-//    {
-//        GameserverInfo* pGSInfo = pGIRequest->GetGSInfo();
-//#ifdef DEBUG
-//        printf( "CheckFinishedGamestats() Got Result! servername: %s -- %d/%d\n", pGSInfo->m_sServername.c_str(), pGSInfo->m_cPlayercount, pGSInfo->m_cMaxplayers );
-//#endif
-//    }
+    Log("CheckFinishedGamestats() Looking for finished GameStats...");
+	vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
+
+	while ( it < m_vThreads.end() )
+	{
+		ThreadedRequest* pThread = (*it);
+        GameStats* pStats = dynamic_cast<GameStats*>(pThread);
+        if ( pStats->GetState() == GSSTATE_DONE )
+        {
+			char logout[128];
+			snprintf(logout, 128, "SourceStats::CheckFinishedGamestats() found finished stats for game '%s'", pStats->GetGameName());
+			Log(logout);
+            HandlefinishedStats( pStats );
+        }
+		it++;
+	}
+}
+
+void SourceStats::HandlefinishedStats( GameStats* pStats )
+{
+    // TODO
 }
 
 void SourceStats::Loop( void )
@@ -117,10 +130,8 @@ void SourceStats::Loop( void )
     {
         CheckThreads();				// for stats only, check for finished threads
         //CheckFinishedMasterQueries();		// check for finished results and do a AS_INFO for those
-        CheckFinishedGamestats();		// check for finished as_info results
-#ifdef DEBUG
-        std::cout << "SourceStats::Loop() active threads: " << GetActiveThreadNo() << std::endl;
-#endif
+        //CheckFinishedGamestats();		// check for finished as_info results
+		Log("SourceStats::Loop()");		
         sleep( 2 );
     }
 }
@@ -163,3 +174,16 @@ void SourceStats::Loop( void )
 //        }
 //    }
 //}
+
+extern pthread_mutex_t muLog;
+
+void SourceStats::Log( const char* logMsg )
+{
+    int curThreads = GetActiveThreadNo();
+    if ( curThreads > 0 )
+    {
+        pthread_mutex_lock (&muLog);
+        cout << "[" << time(NULL) << "|TF: " << curThreads << "] " << logMsg << endl;
+        pthread_mutex_unlock (&muLog);
+    }
+}

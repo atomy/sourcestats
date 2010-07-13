@@ -13,18 +13,24 @@
 class Masterquery : public ThreadedRequest
 {
 public:
-	Masterquery();
+	Masterquery( ThreadFactory* );
 	~Masterquery();
 
 	void				SetMaster( servAddr );
 	void				SetGame( const char* );
-	void				Exec( void );
+	void				EntryPoint( void );
 	void				Query( void );
 	void				AddEntry( GameserverEntry* );
-	query_state			GetStatus( void ) { return m_iState; }
+	mqQuery_state		GetState( void ) { return m_iState; }
 	void				ResetIterator( void );
 	GameserverEntry*	GetNextServer( void );
-	void				SetParent( GameStats* );
+	void                Die( void );
+    void                Exec( void );
+	const char*			GetClassName( void ) { return "Masterquery"; }
+
+	bool				IsMasterquery( void ) { return true; }
+    virtual void        Log( const char* logMsg );
+
 
 protected:
 	servAddr			RequestMore( boost::asio::ip::udp::socket* socket, servAddr gIp );
@@ -37,8 +43,7 @@ private:
 
 	char				gameName[128];
 	servAddr			masterAddr;
-	query_state			m_iState;
-	GameStats*			m_pParent;
+	mqQuery_state		m_iState;
 
 	std::vector <GameserverEntry*>			m_vResultlist;
 	std::vector <GameserverEntry*>::iterator m_geIT;

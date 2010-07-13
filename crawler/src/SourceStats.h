@@ -13,8 +13,8 @@
 class SourceStats : public ThreadFactory
 {
 private:
-    SourceStats() { }
-    SourceStats( const SourceStats& cc );
+    SourceStats();
+	SourceStats( const SourceStats& cc ) { };
     ~SourceStats() { }
 
     static SourceStats*		gSourceStats;
@@ -27,9 +27,12 @@ public:
 
     void					Init( void );
     void					Loop( void );
+    void                    HandlefinishedStats( GameStats* pStats );
     void					CheckFinishedMasterQueries( void );
     void					CheckFinishedGamestats( void );
 	void					AddGameStats( GameStats* );
+	void                    Log( const char* logMsg );
+	//virtual const char*     GetName( void ) { return "SourceStats"; }
 
 private:
     std::vector <GameStats*>		m_vGameStats;

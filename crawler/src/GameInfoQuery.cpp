@@ -6,17 +6,23 @@
 #include <string>
 #include "const.h"
 #include "GameStats.h"
+#include "GameInfoQuery.h"
 
 using boost::asio::ip::udp;
+extern pthread_mutex_t muLog;
 
-GameInfoQuery::GameInfoQuery( servAddr sAddr )
+GameInfoQuery::GameInfoQuery( ThreadFactory* pFactory, servAddr sAddr ) : ThreadedRequest( pFactory )
 {
-    m_iState = STATE_NEW;
+    m_iState = GISTATE_NEW;
     m_sAddr = sAddr;
+	SetParentClassName( "GameInfoQuery" );
 }
 
-void GameInfoQuery::Exec( void )
+void GameInfoQuery::EntryPoint( void )
 {
+	ThreadedRequest::EntryPoint();
+	QueryforASINFO();
+	ThreadExit();
 }
 
 void GameInfoQuery::QueryforASINFO( void )
@@ -41,13 +47,16 @@ void GameInfoQuery::QueryforASINFO( void )
         // FF FF FF FF 54 53 6F 75 72 63 65 20 45 6E 67 69   ÿÿÿÿTSource Engi
         // 6E 65 20 51 75 65 72 79 00                        ne Query
         socket.send_to(boost::asio::buffer("\xFF" "\xFF" "\xFF" "\xFF" "TSource Engine Query" "\x00"), receiver_endpoint);
-        std::cout << "sent AS_INFO to " << targetAddr << ":" << targetPort << std::endl;
+
+		char logtxt[128];
+		snprintf( logtxt, 128, "Masterquery::QueryforASINFO() sent AS_INFO to %s:%s", targetAddr, targetPort );
+        Log( logtxt );
 
         boost::array<char, 5120> recv_buf;
         udp::endpoint sender_endpoint;
 
-        std::cout << "waiting for reply..." << std::endl;
-        m_iState = STATE_WAITINGFORREPLY;
+		Log( "Masterquery::QueryforASINFO() waiting for reply..." );
+        m_iState = GISTATE_WAITINGFORREPLY;
 
         // wait for reply
         size_t len = socket.receive_from(
@@ -143,7 +152,9 @@ void GameInfoQuery::ParseASINFO(const char* recvData, size_t len)
     read += strlen(strBuf)+1;
     m_pGSInfo->SetGameversion(strBuf);
 
-     printf( "GameInfoRequest::ParseASINFO() - got reply!\n" ); /*\
+    Log("Masterquery::ParseASINFO() got reply!");
+//printf( "GameInfoRequest::ParseASINFO() - got reply!\n" );
+/*\
       type: %x \
       version: %x \
       servername: %s \
@@ -164,10 +175,9 @@ void GameInfoQuery::ParseASINFO(const char* recvData, size_t len)
 	     m_pGSInfo->m_cDedicated, m_pGSInfo->m_cOS, m_pGSInfo->m_cISPassworded, m_pGSInfo->m_cISSecure,
 	     m_pGSInfo->m_sGameversion.c_str() );
 */
-    m_iState = STATE_DONE;
+    m_iState = GISTATE_DONE;
 
-	m_pParent->GameInfoDoneCallback();
-	pthread_exit(0);
+	//m_pParent->GameInfoDoneCallback( this );
 }
 
 // returns result if its done yet, if not, false
@@ -178,3 +188,10 @@ void GameInfoQuery::ParseASINFO(const char* recvData, size_t len)
 //    else
 //        return false;
 //}
+
+void GameInfoQuery::Log( const char* logMsg )
+{
+    pthread_mutex_lock (&muLog);
+	std::cout << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "|P|" << GetParentClassName() << "] " << logMsg << std::endl;
+    pthread_mutex_unlock (&muLog);
+}

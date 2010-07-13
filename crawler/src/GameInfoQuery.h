@@ -11,16 +11,19 @@ class GameStats;
 class GameInfoQuery : public ThreadedRequest
 {
 public:
-	GameInfoQuery( servAddr );
+	GameInfoQuery( ThreadFactory* pFactory, servAddr sAddr );
 
-	void				Exec( void );
+	void				EntryPoint( void );
 	GameserverInfo*		GetGSInfo() { return m_pGSInfo; }
 	void				QueryforASINFO( void );
-	query_state			GetStatus( void ) { return m_iState; }
+    giQuery_state		GetState( void ) { return m_iState; }
 	void				SetParent( GameStats* pStats ) { m_pParent = pStats; }
+	const char*   		GetClassName( void ) { return "GameInfoQuery"; }
+    virtual void        Log( const char* logMsg );
+	bool				IsGameInfoQuery( void ) { return true; }
 
 private:
-	query_state			m_iState;
+	giQuery_state	    m_iState;
 	GameserverInfo*		m_pGSInfo;
 	servAddr			m_sAddr;
 	GameStats*		    m_pParent;

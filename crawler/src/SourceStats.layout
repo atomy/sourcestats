@@ -1,46 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Debug" />
-	<File name="GameInfoQuery.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="541" topLine="15" />
-	</File>
-	<File name="GameInfoQuery.h" open="1" top="1" tabpos="1">
-		<Cursor position="265" topLine="0" />
-	</File>
-	<File name="GameInfoRequest.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="728" topLine="17" />
-	</File>
-	<File name="GameStats.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="3454" topLine="116" />
-	</File>
-	<File name="GameStats.h" open="0" top="0" tabpos="0">
-		<Cursor position="1335" topLine="46" />
-	</File>
-	<File name="Makefile" open="0" top="0" tabpos="0">
-		<Cursor position="22" topLine="0" />
-	</File>
-	<File name="Masterquery.h" open="0" top="0" tabpos="0">
-		<Cursor position="276" topLine="0" />
-	</File>
-	<File name="SourceStats.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="3619" topLine="83" />
-	</File>
-	<File name="SourceStats.h" open="0" top="0" tabpos="0">
-		<Cursor position="719" topLine="20" />
-	</File>
-	<File name="ThreadFactory.cpp" open="0" top="0" tabpos="0">
+	<ActiveTarget name="Debug Win32" />
+	<File name="DebugLog.cpp" open="1" top="0" tabpos="1">
 		<Cursor position="266" topLine="0" />
 	</File>
-	<File name="ThreadFactory.h" open="0" top="0" tabpos="0">
-		<Cursor position="442" topLine="9" />
+	<File name="DebugLog.h" open="1" top="0" tabpos="5">
+		<Cursor position="100" topLine="0" />
 	</File>
-	<File name="ThreadedRequest.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="192" topLine="0" />
+	<File name="GameInfoQuery.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="5848" topLine="168" />
 	</File>
-	<File name="ThreadedRequest.h" open="0" top="0" tabpos="0">
-		<Cursor position="545" topLine="7" />
+	<File name="GameInfoQuery.h" open="1" top="0" tabpos="10">
+		<Cursor position="630" topLine="4" />
+	</File>
+	<File name="GameInfoRequest.cpp" open="0" top="0" tabpos="7">
+		<Cursor position="1681" topLine="28" />
+	</File>
+	<File name="GameStats.cpp" open="1" top="0" tabpos="11">
+		<Cursor position="9914" topLine="308" />
+	</File>
+	<File name="GameStats.h" open="1" top="0" tabpos="12">
+		<Cursor position="383" topLine="14" />
+	</File>
+	<File name="Masterquery.cpp" open="1" top="0" tabpos="13">
+		<Cursor position="9677" topLine="267" />
+	</File>
+	<File name="Masterquery.h" open="1" top="0" tabpos="14">
+		<Cursor position="1183" topLine="22" />
+	</File>
+	<File name="SourceStats.cpp" open="1" top="1" tabpos="2">
+		<Cursor position="5520" topLine="175" />
+	</File>
+	<File name="SourceStats.h" open="1" top="0" tabpos="3">
+		<Cursor position="512" topLine="6" />
+	</File>
+	<File name="ThreadFactory.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="4085" topLine="115" />
+	</File>
+	<File name="ThreadFactory.h" open="1" top="0" tabpos="4">
+		<Cursor position="388" topLine="0" />
+	</File>
+	<File name="ThreadedRequest.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="824" topLine="16" />
+	</File>
+	<File name="ThreadedRequest.h" open="1" top="0" tabpos="8">
+		<Cursor position="603" topLine="0" />
 	</File>
 	<File name="const.h" open="0" top="0" tabpos="0">
-		<Cursor position="58" topLine="0" />
+		<Cursor position="167" topLine="7" />
+	</File>
+	<File name="main.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="132" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

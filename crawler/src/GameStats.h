@@ -8,25 +8,36 @@
 #include <string.h>
 #include <map>
 //#include "Masterquery.h"
-#include "ThreadFactory.h"
+#include "ThreadedRequest.h"
 
 class Masterquery;
+class GameInfoQuery;
 
-class GameStats : public ThreadedRequest, public ThreadFactory
+class GameStats : public ThreadedRequest
 {
 public:
-    GameStats( const char* szGameName );
-    ~GameStats() { }
+    GameStats( ThreadFactory* pFactory, const char* szGameName );
+	~GameStats() { }
 
 	void			CreateMasterqueryWorker( void );
 	void			CreateGameInfoWorker( void );
+	const char*     GetGameName( void ) { return m_sGameName; }
 	void			Loop( void );
-	void			Exec( void );
-	void			SetMasterquery( Masterquery* pQuery );
-	void			MasterqueryDoneCallback( void );
-	void			GameInfoDoneCallback( void );
+	void			EntryPoint( void );
+	//bool			LocateMasterquery( void );
+	//void			SetMasterquery( Masterquery *pQuery );
+	void			GameInfoDoneCallback( GameInfoQuery* pQuery );
 	void			ProgressInfoResults( void );
 	void			AddInfoQuery( GameInfoQuery* );
+	gsQuery_state   GetState( void ) { return m_iQueryState; }
+	void            CheckFinishedGameInfoQueries( void );
+	void            CheckFinishedMasterqueries( void );
+	void            HandlefinishedGIQuery( GameInfoQuery* pQuery );
+    void            HandlefinishedMasterquery( Masterquery* pQuery );
+    virtual void    Log( const char* logMsg );
+
+	const char*   	GetClassName( void ) { return "GameStats"; }
+	void			NextStep( gsQuery_state step );
 
 	static void*	ThreadMasterQuery( void *arg );
 	static void*	ThreadInfoQuery( void *arg );
@@ -36,7 +47,7 @@ private:
 	int				m_pInfoCallbacks;
 	int				m_pInfoRunning;
 	pthread_t		m_tMasterqueryThread;
-
+	gsQuery_state	m_iQueryState;
 
     Masterquery*	m_pMasterquery;
     time_t			m_tMasterqueryStartTime;

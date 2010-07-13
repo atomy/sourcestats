@@ -23,12 +23,9 @@ public:
 	static MasterserverManager* getInstance();
 	static void Destroy();
 
-	void AddServer( Masterserver* mServer );
-	void AddServer( const char* sServerstring );
-	servAddr GetServerAdress( void );
-	//void RequestAllServInfo( void );
-	//void AddEntry( GameserverEntry* pEntry );
-	//void Init( void );
+	void				AddServer( Masterserver* mServer );
+	void				AddServer( const char* sServerstring );
+	servAddr			GetServerAdress( void );
 };
 
 #endif // MASTERSERVERMANAGER_H
