@@ -7,94 +7,93 @@
 #include "ThreadedRequest.h"
 #include <signal.h>
 
+extern pthread_mutex_t muLog;
+
 ThreadFactory::ThreadFactory()
 {
-	pthread_mutex_init(&threadMutex, NULL);
+	pthread_mutex_init(&m_threadMutex, NULL);
 	strncpy( m_sParentClassName, "UNKNOWN", 32 );
-}
-
-void ThreadFactory::RemoveThread( ThreadedRequest* pThread )
-{
-	// TODO, iterator of pThread needed within m_vThreads - really? no smarter way?
-	std::vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
-
-	while ( it < m_vThreads.end() )
-	{
-	    if ( (*it) == pThread )
-	    {
-	        // TODO, lock
-            m_vThreads.erase( it );
-            // TODO, unlock
-			char logout[128];
-			snprintf(logout, 128, "ThreadFactory::RemoveThread() erased thread: '%u'", (unsigned int)(*it)->GetThreadId());
-            delete (*it);
-            break;
-	    }
-	    else
-            it++;
-	}
 }
 
 void ThreadFactory::AddThread( ThreadedRequest* pThread )
 {
-    assert(strcmp(GetParentClassName(), "UNKNOWN")); // != UNKNOWN
+    //assert(strcmp(GetParentClassName(), "UNKNOWN")); // != UNKNOWN
     assert(pThread->GetThreadId());
 	char logout[128];
 	snprintf(logout, 128, "ThreadFactory::AddThread() added new thread: '%u' starttime: '%u' timeout: '%d'", (unsigned int)pThread->GetThreadId(), (unsigned int)pThread->GetStartTime(), pThread->GetTimeout());
 	Log(logout);
+    pthread_mutex_lock(&m_threadMutex);
 	m_vThreads.push_back( pThread );
-
-//#ifdef DEBUG
-//    std::cout << "[" << time(NULL) << "][P|" << GetParentClassName() << "] ThreadFactory::AddThread() thread count: " << m_vThreads.size() << std::endl;
-//#endif
+    pthread_mutex_unlock(&m_threadMutex);
 }
 
 void ThreadFactory::CheckThreads( void )
 {
+	char logout[128];
+	snprintf(logout, 128, "ThreadFactory::CheckThreads() checking '%d' threads", m_vThreads.size());
+	Log(logout);
+
+    pthread_mutex_lock(&m_threadMutex);
 	std::vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
 
 	while ( it < m_vThreads.end() )
 	{
 		ThreadedRequest* pThread = (*it);
-		int ret = pthread_kill( pThread->GetThreadId(), 0 );
+		int ret = CheckThread(pThread);
 
 		if ( pThread->GetKill() )
 		{
-			ThreadExit( pThread );
-			it = m_vThreads.erase( it );
+			char logout[128];
+			snprintf(logout, 128, "ThreadFactory::CheckThreads() thread '%u' has killswitch enabled, cancelling...", (unsigned int)pThread->GetThreadId());
+			LogNoDeadLock(logout);
+			CancelThread((*it));
+			it = RemoveThread(it);
 		}
 		else if ( ret != 0 && errno == ESRCH )
 		{
 			char logout[128];
 			snprintf(logout, 128, "ThreadFactory::CheckThreads() thread '%u' does no longer exists", (unsigned int)pThread->GetThreadId());
-			Log(logout);
-			ThreadExit( (*it) );
-			it = m_vThreads.erase( it );
+			LogNoDeadLock(logout);
+			it = RemoveThread(it);
 		}
 		else if ( pThread->GetStartTime() + pThread->GetTimeout() < time(NULL) )
 		{
-			ret = pthread_cancel( pThread->GetThreadId() );
-
+			TimeoutThread_Callback( pThread );
+			ret = CancelThread( pThread );
 			if ( ret != 0 )
-				std::cerr << "[" << time(NULL) << "][P|" << GetParentClassName() << "] ThreadFactory::CheckThreads() ERROR while trying to cancel thread '" << pThread->GetThreadId() << "' -- " << strerror(errno) << std::endl;
+				std::cerr << "[" << time(NULL) << "] ThreadFactory::CheckThreads() ERROR while trying to cancel thread '" << pThread->GetThreadId() << "' -- " << strerror(errno) << std::endl;
 			else
 			{
 				char logout[128];
 				snprintf(logout, 128, "ThreadFactory::CheckThreads() thread '%u' has been cancelled due timeout", (unsigned int)pThread->GetThreadId());
-				Log(logout);
+				LogNoDeadLock(logout);
 			}
-
-			ThreadExit( (*it) );
-			it = m_vThreads.erase( it );
+			it = RemoveThread(it);
 		}
 		else
 			it++;
 	}
+    pthread_mutex_unlock(&m_threadMutex);
 }
 
-void ThreadFactory::ThreadExit( ThreadedRequest* pRequest )
+std::vector<ThreadedRequest*>::iterator ThreadFactory::RemoveThread( std::vector<ThreadedRequest*>::iterator pIt )
 {
-	delete pRequest;
+	char logout[128];
+	snprintf(logout, 128, "ThreadFactory::RemoveThread() removing thread '%u'", (unsigned int)(*pIt)->GetThreadId());
+	LogNoDeadLock(logout);
+	std::vector<ThreadedRequest*>::iterator it = m_vThreads.erase( pIt );
+	//delete (*pIt);
+	return it;
+}
+
+int ThreadFactory::CancelThread( ThreadedRequest* pRequest )
+{
+	return pthread_cancel( pRequest->GetThreadId() );
+}
+
+int ThreadFactory::CheckThread( ThreadedRequest* pRequest )
+{
+	return pthread_kill( pRequest->GetThreadId(), 0 );
 }
 
 // count my threads and any subsequent threadfactories' threads
@@ -103,10 +102,15 @@ int ThreadFactory::GetActiveThreadNo( void )
 //#ifdef DEBUG
 //    std::cout << "[" << time(NULL) << "][P|" << GetParentClassName() << "] ThreadFactory::GetActiveThreadNo() counting child-threads, vector size: '" << m_vThreads.size() << "'" << std::endl;
 //#endif
+	//std::cout << "ThreadFactory::GetActiveThreadNo() LOCK" << std::endl;
+    pthread_mutex_lock(&m_threadMutex);
     int iThreadCount = 0;
 
     if ( m_vThreads.size() <= 0 )
+	{
+		pthread_mutex_unlock(&m_threadMutex);
         return iThreadCount;
+	}
 
     std::vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
 
@@ -117,7 +121,9 @@ int ThreadFactory::GetActiveThreadNo( void )
         it++;
         iThreadCount++;
 	}
-
+    pthread_mutex_unlock(&m_threadMutex);
+	//std::cout << "ThreadFactory::GetActiveThreadNo() UNLOCK" << std::endl;
+	
 	return iThreadCount;
 }
 
@@ -129,23 +135,25 @@ int ThreadFactory::GetActiveThreadNo( void )
 //    RemoveThread( pThread );
 //}
 
-#ifdef DEBUG
-void ThreadFactory::SetParentClassName( const char* pName )
-{
-	strncpy( m_sParentClassName, pName, 32 );
-}
-
-const char* ThreadFactory::GetParentClassName( void )
-{
-	return m_sParentClassName;
-}
-#endif
-
-extern pthread_mutex_t muLog;
+//#ifdef DEBUG
+//void ThreadFactory::SetParentClassName( const char* pName )
+//{
+//	strncpy( m_sParentClassName, pName, 32 );
+//}
+//
+//const char* ThreadFactory::GetParentClassName( void )
+//{
+//	return m_sParentClassName;
+//}
+//#endif
 
 void ThreadFactory::Log( const char* logMsg )
 {
     pthread_mutex_lock (&muLog);
 	std::cout << "[" << time(NULL) << "] " << logMsg << std::endl;
     pthread_mutex_unlock (&muLog);
+}
+
+void ThreadFactory::TimeoutThread_Callback( ThreadedRequest* pThread )
+{
 }

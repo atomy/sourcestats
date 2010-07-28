@@ -13,7 +13,7 @@ extern pthread_mutex_t muLog;
 Masterquery::Masterquery( ThreadFactory* pFactory ) : ThreadedRequest( pFactory )
 {
     m_iState = MQSTATE_NEW;
-	SetParentClassName( "Masterquery" );
+	//SetParentClassName( "Masterquery" );
 }
 
 Masterquery::~Masterquery()
@@ -53,7 +53,9 @@ void Masterquery::Exec( void )
 
 void Masterquery::EntryPoint( void )
 {
-	ThreadedRequest::EntryPoint();
+	ThreadedRequest::PreEntryPoint();
+	Exec();
+	ThreadedRequest::PostEntryPoint();
 }
 
 servAddr Masterquery::ParseMasterReply(const char* recvData, size_t len)
@@ -222,7 +224,7 @@ void Masterquery::Query( void )
     }
     catch (std::exception& e)
     {
-		std::cerr << "[" << time(NULL) << "][THREAD|" << GetParentClassName() << "|" << GetThreadId() << "] Masterquery::Query() exception raised: " << e.what() << std::endl;
+		std::cerr << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "] Masterquery::Query() exception raised: " << e.what() << std::endl;
     }
 }
 
@@ -232,20 +234,16 @@ void Masterquery::Finished( void )
     m_iState = MQSTATE_DONE;
 }
 
-// oh noooez :(
-void Masterquery::Die( void )
-{
-    ThreadExit();
-}
-
 void Masterquery::AddEntry( GameserverEntry* pEntry )
 {
     char output[128];
 	char logout[128];
     servAddr2String( output, 128, pEntry->GetAddr() );
 	snprintf(logout, 128, "Masterquery::AddEntry() added new entry with address: '%s'", output);
-    Log(logout); 
+    Log(logout);
 
+    // lock is handled by state, we arent accessing this element before its complete,
+    // could use some improvement though we rely on calling funcs that they obey that rule
     m_vResultlist.push_back( pEntry );
 }
 
@@ -272,6 +270,6 @@ GameserverEntry* Masterquery::GetNextServer( void )
 void Masterquery::Log( const char* logMsg )
 {
     pthread_mutex_lock (&muLog);
-	std::cout << "[" << time(NULL) << "][THREAD:" << GetThreadId() << "|P:" << GetParentClassName() << "|G:" << gameName << "] "<< logMsg << std::endl;
+	std::cout << "[" << time(NULL) << "][THREAD:" << GetThreadId() << "|G:" << gameName << "] "<< logMsg << std::endl;
     pthread_mutex_unlock (&muLog);
 }

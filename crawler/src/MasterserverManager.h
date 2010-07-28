@@ -3,11 +3,12 @@
 
 #include <vector>
 #include "Masterserver.h"
+#include <pthread.h>
 
 class MasterserverManager
 {
 private:
-	MasterserverManager() { };
+	MasterserverManager() { pthread_mutex_init(&m_masterMutex, NULL); };
 	MasterserverManager( const MasterserverManager& cc );
 	~MasterserverManager() { };
 
@@ -18,6 +19,7 @@ private:
 
 	//static void CleanupServerInfos( void );
 	//void RequestServInfo( servAddr );
+	pthread_mutex_t					m_masterMutex;
 
 public:
 	static MasterserverManager* getInstance();

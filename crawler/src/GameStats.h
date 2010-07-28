@@ -12,6 +12,7 @@
 
 class Masterquery;
 class GameInfoQuery;
+class GameserverInfo;
 
 class GameStats : public ThreadedRequest
 {
@@ -25,34 +26,40 @@ public:
 	void			Loop( void );
 	void			EntryPoint( void );
 	//bool			LocateMasterquery( void );
-	//void			SetMasterquery( Masterquery *pQuery );
+	void			SetMasterquery( Masterquery *pQuery );
 	void			GameInfoDoneCallback( GameInfoQuery* pQuery );
 	void			ProgressInfoResults( void );
-	void			AddInfoQuery( GameInfoQuery* );
+	//void			AddInfoQuery( GameInfoQuery* );
 	gsQuery_state   GetState( void ) { return m_iQueryState; }
+	void			SetState( gsQuery_state state ) { m_iQueryState = state; }
 	void            CheckFinishedGameInfoQueries( void );
 	void            CheckFinishedMasterqueries( void );
 	void            HandlefinishedGIQuery( GameInfoQuery* pQuery );
     void            HandlefinishedMasterquery( Masterquery* pQuery );
     virtual void    Log( const char* logMsg );
+	virtual void	TimeoutThread_Callback( ThreadedRequest* pThread );
 
 	const char*   	GetClassName( void ) { return "GameStats"; }
 	void			NextStep( gsQuery_state step );
+	void			CheckTermination( void );
+	GameserverInfo*	GetNextServer( void );
+	void			ResetIterator( void );
 
 	static void*	ThreadMasterQuery( void *arg );
 	static void*	ThreadInfoQuery( void *arg );
 
 private:
     char 			m_sGameName[32];
-	int				m_pInfoCallbacks;
-	int				m_pInfoRunning;
+	int				m_iInfoRunning;
 	pthread_t		m_tMasterqueryThread;
 	gsQuery_state	m_iQueryState;
 
     Masterquery*	m_pMasterquery;
     time_t			m_tMasterqueryStartTime;
+	std::vector<GameserverInfo*>	m_vGameInfos;
+	std::vector<GameserverInfo*>::iterator m_itGI;
 
-	std::vector<GameInfoQuery*> m_vGameInfoQueries;
+	//std::vector<GameInfoQuery*> m_vGameInfoQueries;
 
     class MMThreadArgs
     {

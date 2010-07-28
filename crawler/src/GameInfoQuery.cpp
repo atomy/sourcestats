@@ -14,20 +14,20 @@ extern pthread_mutex_t muLog;
 GameInfoQuery::GameInfoQuery( ThreadFactory* pFactory, servAddr sAddr ) : ThreadedRequest( pFactory )
 {
     m_iState = GISTATE_NEW;
-    m_sAddr = sAddr;
-	SetParentClassName( "GameInfoQuery" );
+	//SetParentClassName( "GameInfoQuery" );
+	m_pGSInfo = new GameserverInfo(sAddr);
 }
 
 void GameInfoQuery::EntryPoint( void )
 {
-	ThreadedRequest::EntryPoint();
+	ThreadedRequest::PreEntryPoint();
 	QueryforASINFO();
-	ThreadExit();
+	ThreadedRequest::PostEntryPoint();
 }
 
 void GameInfoQuery::QueryforASINFO( void )
 {
-    servAddr sAddr = m_sAddr;
+    servAddr sAddr = m_pGSInfo->GetAddr();
     try
     {
         boost::asio::io_service io_service;
@@ -176,7 +176,6 @@ void GameInfoQuery::ParseASINFO(const char* recvData, size_t len)
 	     m_pGSInfo->m_sGameversion.c_str() );
 */
     m_iState = GISTATE_DONE;
-
 	//m_pParent->GameInfoDoneCallback( this );
 }
 
@@ -192,6 +191,6 @@ void GameInfoQuery::ParseASINFO(const char* recvData, size_t len)
 void GameInfoQuery::Log( const char* logMsg )
 {
     pthread_mutex_lock (&muLog);
-	std::cout << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "|P|" << GetParentClassName() << "] " << logMsg << std::endl;
+	std::cout << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "] " << logMsg << std::endl;
     pthread_mutex_unlock (&muLog);
 }

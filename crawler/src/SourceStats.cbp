@@ -42,6 +42,8 @@
 				</ResourceCompiler>
 			</Target>
 		</Build>
+		<Unit filename="DBProcessor.cpp" />
+		<Unit filename="DBProcessor.h" />
 		<Unit filename="DebugLog.cpp" />
 		<Unit filename="DebugLog.h" />
 		<Unit filename="GameInfoQuery.cpp" />

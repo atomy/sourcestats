@@ -1,5 +1,5 @@
 OUTBIN = sourcestats
-OBJ = GameInfoRequest.o GameserverEntry.o GameserverInfo.o GameserverManager.o Masterquery.o MasterqueryManager.o Masterserver.o MasterserverManager.o SourceStats.o util.o main.o GameStats.o ThreadedRequest.o ThreadFactory.o GameInfoQuery.o DebugLog.o
+OBJ = GameserverEntry.o GameserverInfo.o Masterquery.o Masterserver.o MasterserverManager.o SourceStats.o util.o main.o GameStats.o ThreadedRequest.o ThreadFactory.o GameInfoQuery.o DebugLog.o DBProcessor.o
 
 default: all
 
@@ -14,10 +14,10 @@ astest: ${OBJ}
 	g++ -ggdb -DDEBUG -o astest -lboost_system -lboost_thread *.o 
 
 %.o: %.cpp
-	g++ -c -ggdb -DDEBUG -c $<
+	g++ -I/usr/include/mysql++ -I/usr/include/mysql -c -ggdb -DDEBUG -c $<
 
 all: ${OBJ}
-	g++ -ggdb -DDEBUG -o ${OUTBIN} -pthread -lboost_system -lboost_thread *.o 
+	g++ -ggdb -DDEBUG -o ${OUTBIN} -pthread -lmysqlpp -lboost_system -lboost_thread *.o 
 
 clean:
 	rm -f *.o ${OUTBIN} mastertest astest 

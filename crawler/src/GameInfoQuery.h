@@ -25,7 +25,6 @@ public:
 private:
 	giQuery_state	    m_iState;
 	GameserverInfo*		m_pGSInfo;
-	servAddr			m_sAddr;
 	GameStats*		    m_pParent;
 
 	void				ParseASINFO( const char*, size_t );

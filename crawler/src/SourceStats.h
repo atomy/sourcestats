@@ -4,7 +4,6 @@
 #include "const.h"
 #include <stdio.h>
 #include "GameserverInfo.h"
-#include "MasterqueryManager.h"
 #include <vector>
 #include "GameStats.h"
 #include "ThreadFactory.h"
@@ -24,14 +23,17 @@ public:
     static void				Destroy();
 
 	static void*			ThreadGameStats( void *arg );
+	static void*			ThreadDatabase( void *arg );
 
     void					Init( void );
     void					Loop( void );
     void                    HandlefinishedStats( GameStats* pStats );
-    void					CheckFinishedMasterQueries( void );
     void					CheckFinishedGamestats( void );
+	void					CheckFinishedDBProcessors( void );
 	void					AddGameStats( GameStats* );
 	void                    Log( const char* logMsg );
+	void                    LogNoDeadLock( const char* logMsg );
+
 	//virtual const char*     GetName( void ) { return "SourceStats"; }
 
 private:
@@ -60,6 +62,26 @@ private:
         char*				m_pGameName;
     };
 
+	class MMThreadArgs2
+	{
+	public:
+		MMThreadArgs2( SourceStats* pObj, GameStats* pArg ) : m_pParent( pObj ), m_pGameStats( pArg )
+		{ }
+
+		SourceStats* GetParent( void )
+		{
+			return m_pParent;
+		}
+
+		GameStats* GetGameStats( void )
+		{
+			return m_pGameStats;
+		}
+
+	private:
+		SourceStats* 		m_pParent;
+		GameStats*			m_pGameStats;
+	};
 };
 
 #endif // SOURCESTATS_H

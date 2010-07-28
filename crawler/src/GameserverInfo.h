@@ -10,16 +10,17 @@ class GameserverInfo : public GameserverEntry
 {
 public:
 	GameserverInfo(servAddr);
+	//GameserverInfo(const GameserverInfo& obj);
 	~GameserverInfo();
 
 public: 
 	// reply data, see http://developer.valvesoftware.com/wiki/Server_Queries
 	unsigned char 	m_cType;
 	unsigned char 	m_cVersion;
-	std::string			m_sServername;
-	std::string			m_sCurrentmap;
-	std::string			m_sGamedir;
-	std::string			m_sGamedesc;
+	std::string		m_sServername;
+	std::string		m_sCurrentmap;
+	std::string		m_sGamedir;
+	std::string		m_sGamedesc;
 	unsigned short	m_iAppid;
 	unsigned char	m_cPlayercount;
 	unsigned char 	m_cMaxplayers;
@@ -28,7 +29,7 @@ public:
 	unsigned char	m_cOS;
 	unsigned char	m_cISPassworded;
 	unsigned char	m_cISSecure;
-	std::string			m_sGameversion;
+	std::string		m_sGameversion;
 
 public:
 	void SetType( unsigned char type ) { m_cType = type; }

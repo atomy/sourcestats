@@ -24,13 +24,11 @@ public:
 	mqQuery_state		GetState( void ) { return m_iState; }
 	void				ResetIterator( void );
 	GameserverEntry*	GetNextServer( void );
-	void                Die( void );
     void                Exec( void );
 	const char*			GetClassName( void ) { return "Masterquery"; }
 
-	bool				IsMasterquery( void ) { return true; }
     virtual void        Log( const char* logMsg );
-
+	virtual bool		IsMasterquery( void ) { return true; }
 
 protected:
 	servAddr			RequestMore( boost::asio::ip::udp::socket* socket, servAddr gIp );

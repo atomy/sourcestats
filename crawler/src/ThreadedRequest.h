@@ -19,13 +19,16 @@ public:
 	void            SetStartTime( time_t time ) { m_tStartTime = time; }
 	pthread_t		GetThreadId( void ) { return m_tSelf; }
 	int				GetTimeout( void ) { return m_iTimeout; }
-	void			EntryPoint( void );
+	void			PreEntryPoint( void );
+	void			PostEntryPoint( void );
+	void			Init( void );
 
     virtual void    Log( const char* logMsg );
 	virtual const char*   GetClassName( void ) = 0;
 
+	virtual void	Loop( void );
+
 	void			SetTimeout( int timeout ) { m_iTimeout = timeout; }
-    void            ThreadExit( void );
 	void 			SetKill( bool );
 	bool			GetKill( void ) { return m_bDie; }
 

@@ -41,11 +41,15 @@ void MasterserverManager::AddServer( Masterserver* mServer )
 	servAddr2String( servString, 128, mServer->getAddr() );
 	std::cout << "[" << time(NULL) << "] MasterserverManager::AddServer() added new master server: " << servString << std::endl;
 
+    pthread_mutex_lock(&m_masterMutex);
 	m_vMasterserverList.push_back(mServer);
+	pthread_mutex_unlock(&m_masterMutex);
 }
 
 servAddr MasterserverManager::GetServerAdress( void )
 {
+    pthread_mutex_lock(&m_masterMutex);
 	Masterserver* mServer = m_vMasterserverList.front(); // TODO, get a random one, make some quality checks to use the best quality one, lowest query rate etc.
+	pthread_mutex_unlock(&m_masterMutex);
 	return mServer->getAddr();
 }
