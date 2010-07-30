@@ -8,27 +8,32 @@
 #include "GameserverInfo.h"
 #include "MasterserverManager.h"
 
-#define TIMEOUT_MASTERWORKER 20		// How long do we want to wait for the worker to complete ?
-#define TIMEOUT_GAMEINFOWORKER 5	// How long do we want to wait for the game info workers to complete ?
-#define RETRY_MASTERWORKER 3		// How often do we retry on unsuccessful result till we give up?
-#define RETRY_GAMEINFOWORKER 3		// ^^^
+#define TIMEOUT_MASTERWORKER 100		// How long do we want to wait for the worker to complete ?
+#define TIMEOUT_GAMEINFOWORKER 10	// How long do we want to wait for the game info workers to complete ?
+//#define RETRY_MASTERWORKER 3		// How often do we retry on unsuccessful result till we give up?
+//#define RETRY_GAMEINFOWORKER 3		// ^^^
+#define GINFO_MAXPARALLEL 1000
 
 using namespace std;
 extern pthread_mutex_t muLog;
 
 static MasterserverManager* gMasterManager = MasterserverManager::getInstance();
 
+
 GameStats::GameStats( ThreadFactory* pFactory, const char* szGameName ) : ThreadedRequest( pFactory )
 {
     strncpy( m_sGameName, szGameName, 32 );
     SetStartTime( time(NULL) );
 	SetMasterquery( NULL );
+	m_iInfoCompleted = 0;
+	m_iInfoRunning = 0;
 }
 
 void GameStats::EntryPoint( void )
 {
 	ThreadedRequest::PreEntryPoint();
-	m_iQueryState = GSSTATE_NEW;
+	pthread_mutex_init(&m_iGamestatsMutex, NULL);
+	m_iQueryState = GSSTATE_WAITINGMASTERQ;
 	//NextStep( GSSTATE_NEW );
 	CreateMasterqueryWorker();
 	ThreadedRequest::PostEntryPoint();
@@ -38,7 +43,7 @@ void GameStats::CreateMasterqueryWorker( void )
 {
 	Log("GameStats::CreateMasterqueryWorker() creating worker for masterquery");
 	pthread_t tThread;
-	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, "cstrike" );
+	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, m_sGameName );
 	int ret = pthread_create( &tThread, NULL, GameStats::ThreadMasterQuery, pThreadArgs );
 }
 
@@ -97,21 +102,35 @@ void GameStats::SetMasterquery( Masterquery *pQuery )
 // spawning threads for retrieving AS_INFO for all gameserver entries
 void GameStats::CreateGameInfoWorker( void )
 {
+	if ( m_iQueryState != GSSTATE_WAITINGASINFOWORKERS )
+		return;
+
 	if ( !m_pMasterquery || m_pMasterquery->GetState() != MQSTATE_DONE )
 	{
 		std::cerr << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "] GameStats::CreateGameInfoWorker() tried to create gameinfo workers w/o any valid masterserver response!" << endl;
 		return;
-	}
+	}	
 
-	m_iInfoRunning = 0;
-	m_pMasterquery->ResetIterator();
-
-	for( GameserverEntry* pEntry = m_pMasterquery->GetNextServer(); pEntry; pEntry = m_pMasterquery->GetNextServer() )
+	// busy, retry later
+	while ( m_iInfoRunning <= GINFO_MAXPARALLEL )	
 	{
+		GameserverEntry* pEntry = m_pMasterquery->GetNextServer();
+		if(!pEntry)
+		{
+			m_iQueryState = GSSTATE_WAITINGASINFOWORKERSFINISH;
+			return;
+		}
+
 		pthread_t tThread;
 		MMThreadArgs2* pThreadArgs = new MMThreadArgs2( this, pEntry->GetAddr() );
 		int ret = pthread_create( &tThread, NULL, GameStats::ThreadInfoQuery, pThreadArgs );
 		m_iInfoRunning++;
+	}
+
+	if (m_iInfoRunning > GINFO_MAXPARALLEL)
+	{	
+		Log("GameStats::CreateGameInfoWorker() busy -- i'm over limit for GameInfo-Queries!");
+		return;
 	}
 }
 
@@ -152,6 +171,7 @@ void GameStats::Loop( void )
 	{
 		CheckFinishedMasterqueries();
 		CheckFinishedGameInfoQueries();
+		CreateGameInfoWorker();
 		CheckThreads();
 		CheckTermination();
 		sleep(1);
@@ -161,7 +181,7 @@ void GameStats::Loop( void )
 // check if we are done, if so, mark us as done
 void GameStats::CheckTermination( void )
 {
-	if (m_iQueryState == GSSTATE_WAITINGASINFOWORKERS)
+	if (m_iQueryState == GSSTATE_WAITINGASINFOWORKERSFINISH)
 	{
 		if (m_iInfoRunning == 0)
 		{		
@@ -211,7 +231,6 @@ void GameStats::CheckFinishedGameInfoQueries( void )
 			Log(logout);
 			m_vGameInfos.push_back(new GameserverInfo((*pInfoQuery->GetGSInfo())));
 			pInfoQuery->SetKill(true);
-			m_iInfoRunning--;
         }
 		else if ( !pInfoQuery )
 		{
@@ -225,13 +244,12 @@ void GameStats::CheckFinishedGameInfoQueries( void )
 void GameStats::CheckFinishedMasterqueries( void )
 {
 	Log("GameStats::CheckFinishedMasterqueries() Looking for finished Masterqueries...");
-    if (m_pMasterquery && m_pMasterquery->GetState() == MQSTATE_DONE)
+    if (m_pMasterquery && m_pMasterquery->GetState() == MQSTATE_DONE && m_iQueryState == GSSTATE_WAITINGMASTERQ)
     {
         Log("GameStats::CheckFinishedMasterqueries() Masterquery is done!");
-        CreateGameInfoWorker();
+		m_pMasterquery->ResetIterator();
 		m_iQueryState = GSSTATE_WAITINGASINFOWORKERS;
 		m_pMasterquery->SetKill(true);
-		m_pMasterquery = NULL;
     }
 }
 
@@ -244,6 +262,24 @@ void GameStats::Log( const char* logMsg )
 
 void GameStats::TimeoutThread_Callback( ThreadedRequest* pThread )
 {
-	Log("GameStats::CheckFinishedMasterqueries() TimeoutThread_Callback");
+	char log[128];
+	snprintf(log, 128, "GameStats::TimeoutThread_Callback() after running for '%u' seconds", (unsigned int)(time(NULL)-pThread->GetStartTime()));
+	LogNoDeadLock(log);
+}
+
+void GameStats::GameInfoCompleted()
+{
+	pthread_mutex_lock (&m_iGamestatsMutex);
 	m_iInfoRunning--;
+	m_iInfoCompleted++;
+	pthread_mutex_unlock (&m_iGamestatsMutex);
+}
+
+void GameStats::ExitThread_Callback( ThreadedRequest* pThread )
+{
+	char log[128];
+	snprintf(log, 128, "GameStats::ExitThread_Callback() after running for '%u' seconds", (unsigned int)(time(NULL)-pThread->GetStartTime()));
+	LogNoDeadLock(log);
+	if(pThread->IsGameInfoQuery())
+		GameInfoCompleted();
 }

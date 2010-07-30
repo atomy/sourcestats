@@ -38,6 +38,7 @@ public:
     void            HandlefinishedMasterquery( Masterquery* pQuery );
     virtual void    Log( const char* logMsg );
 	virtual void	TimeoutThread_Callback( ThreadedRequest* pThread );
+	virtual void	ExitThread_Callback( ThreadedRequest* pThread );
 
 	const char*   	GetClassName( void ) { return "GameStats"; }
 	void			NextStep( gsQuery_state step );
@@ -49,8 +50,11 @@ public:
 	static void*	ThreadInfoQuery( void *arg );
 
 private:
+	void			GameInfoCompleted();
+
     char 			m_sGameName[32];
 	int				m_iInfoRunning;
+	int				m_iInfoCompleted;
 	pthread_t		m_tMasterqueryThread;
 	gsQuery_state	m_iQueryState;
 
@@ -58,6 +62,8 @@ private:
     time_t			m_tMasterqueryStartTime;
 	std::vector<GameserverInfo*>	m_vGameInfos;
 	std::vector<GameserverInfo*>::iterator m_itGI;
+
+	pthread_mutex_t m_iGamestatsMutex;
 
 	//std::vector<GameInfoQuery*> m_vGameInfoQueries;
 

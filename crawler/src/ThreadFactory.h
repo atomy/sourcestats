@@ -18,6 +18,7 @@ public:
 
     virtual void                Log( const char* logMsg );
 	virtual void				TimeoutThread_Callback( ThreadedRequest* pThread );
+	virtual void				ExitThread_Callback( ThreadedRequest* pThread );
 
 	void						AddThread( ThreadedRequest* pRequest );
 	void						CheckThreads( void );

@@ -208,7 +208,7 @@ void Masterquery::Query( void )
         int loops = 0;
         while ( gIp.ip1 != 0 || gIp.ip2 != 0 || gIp.ip3 != 0 || gIp.ip4 != 0 || gIp.port != 0 )
         {
-            if ( loops >= 20 )
+            if ( loops >= 500 )
             {
 				Log("Masterquery::Query() hard break");
                 break;
@@ -216,7 +216,6 @@ void Masterquery::Query( void )
 
             loops++;
 			Log("Masterquery::Query() requesting more...");
-            exit(0);
             gIp = RequestMore(&socket, gIp);
         }
 		Log("Masterquery::Query() EOF!");

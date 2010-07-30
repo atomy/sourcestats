@@ -80,9 +80,9 @@ std::vector<ThreadedRequest*>::iterator ThreadFactory::RemoveThread( std::vector
 {
 	char logout[128];
 	snprintf(logout, 128, "ThreadFactory::RemoveThread() removing thread '%u'", (unsigned int)(*pIt)->GetThreadId());
+	ExitThread_Callback((*pIt));
 	LogNoDeadLock(logout);
 	std::vector<ThreadedRequest*>::iterator it = m_vThreads.erase( pIt );
-	//delete (*pIt);
 	return it;
 }
 
@@ -155,5 +155,10 @@ void ThreadFactory::Log( const char* logMsg )
 }
 
 void ThreadFactory::TimeoutThread_Callback( ThreadedRequest* pThread )
+{
+	ExitThread_Callback(pThread);
+}
+
+void ThreadFactory::ExitThread_Callback( ThreadedRequest* pThread )
 {
 }

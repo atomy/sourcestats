@@ -9,7 +9,7 @@
 #include "ThreadedRequest.h"
 #include "DBProcessor.h"
 
-#define TIMEOUT_GAMESTATS 30		// How long do we want to wait for the worker to complete ?
+#define TIMEOUT_GAMESTATS 120		// How long do we want to wait for the worker to complete ?
 #define TIMEOUT_DBPROCESSOR 30		// How long do we want to wait for the worker to complete ?
 
 using namespace std;
@@ -46,11 +46,15 @@ void SourceStats::Init( void )
     gMasterManager->AddServer( "216.207.205.99:27011" );
     gMasterManager->AddServer( "216.207.205.98:27011" );
 
-    Log("SourceStats::main() Requesting GameServer for game cstrike...");
-    Log("SourceStats::main() Creating worker for game cstrike...");
+	const char* sGameName = "dystopia";
+	char log[128];
+	snprintf(log, 128, "SourceStats::main() Requesting GameServer for game '%s'...", sGameName);
+    Log(log);
+    snprintf(log, 128, "SourceStats::main() Creating worker for game '%s'...", sGameName);
+	Log(log);
 
 	pthread_t tThread;
-	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, "cstrike" );
+	MMThreadArgs* pThreadArgs = new MMThreadArgs( this, sGameName );
 	int ret = pthread_create( &tThread, NULL, SourceStats::ThreadGameStats, pThreadArgs );
 }
 
