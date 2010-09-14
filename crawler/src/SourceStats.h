@@ -7,7 +7,7 @@
 #include <vector>
 #include "GameStats.h"
 #include "ThreadFactory.h"
-
+#include "GameStatsResult.h"
 
 class SourceStats : public ThreadFactory
 {
@@ -38,6 +38,7 @@ public:
 
 private:
     std::vector <GameStats*>		m_vGameStats;
+    std::vector <GameStatsResult*>	m_vGameStatsResults;
 
     class MMThreadArgs
     {

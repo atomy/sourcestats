@@ -22,10 +22,10 @@ public:
 
 	void					ProcessToDatabase( void );
 	void					EntryPoint( void );
-    bool		            BuildProcessQuery();
+    bool		            BuildProcessQuery( bool bPrintStatsOnly = false );
 	dbQuery_state			GetState() { return m_iState; }
 	const char*				GetGameName();
-	
+
 private:
 	void					Setup( void );
 	bool					DataLeft();

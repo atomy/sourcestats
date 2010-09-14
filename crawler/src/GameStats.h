@@ -14,6 +14,7 @@ class Masterquery;
 class GameInfoQuery;
 class GameserverInfo;
 
+
 class GameStats : public ThreadedRequest
 {
 public:

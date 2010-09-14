@@ -7,6 +7,7 @@
 #include "GameInfoQuery.h"
 #include "GameserverInfo.h"
 #include "MasterserverManager.h"
+#include <iostream>
 
 #define TIMEOUT_MASTERWORKER 100		// How long do we want to wait for the worker to complete ?
 #define TIMEOUT_GAMEINFOWORKER 10	// How long do we want to wait for the game info workers to complete ?
@@ -109,10 +110,10 @@ void GameStats::CreateGameInfoWorker( void )
 	{
 		std::cerr << "[" << time(NULL) << "][THREAD|" << GetThreadId() << "] GameStats::CreateGameInfoWorker() tried to create gameinfo workers w/o any valid masterserver response!" << endl;
 		return;
-	}	
+	}
 
 	// busy, retry later
-	while ( m_iInfoRunning <= GINFO_MAXPARALLEL )	
+	while ( m_iInfoRunning <= GINFO_MAXPARALLEL )
 	{
 		GameserverEntry* pEntry = m_pMasterquery->GetNextServer();
 		if(!pEntry)
@@ -128,7 +129,7 @@ void GameStats::CreateGameInfoWorker( void )
 	}
 
 	if (m_iInfoRunning > GINFO_MAXPARALLEL)
-	{	
+	{
 		Log("GameStats::CreateGameInfoWorker() busy -- i'm over limit for GameInfo-Queries!");
 		return;
 	}
@@ -153,10 +154,19 @@ void GameStats::ResetIterator( void )
 
 GameserverInfo* GameStats::GetNextServer( void )
 {
+    if ( m_itGI < m_vGameInfos.begin() || m_itGI > m_vGameInfos.end() )
+        throw "GameStats::GetNextServer() ERROR, iterator out of range! Did you ResetIterator?";
+
 	if ( m_vGameInfos.size() <= 0 )
 		Log("GameStats::GetNextServer() error, list is empty!");
+    else
+    {
+		char logout[128];
+        snprintf(logout, 128, "GameStats::GetNextServer() vector holds '%d' elements", m_vGameInfos.size());
+		Log(logout);
+    }
 
-	if ( m_itGI == m_vGameInfos.end() )
+	if ( m_itGI >= m_vGameInfos.end() )
 		return NULL;
 
 	GameserverInfo* pInfo = (*m_itGI);
@@ -184,7 +194,7 @@ void GameStats::CheckTermination( void )
 	if (m_iQueryState == GSSTATE_WAITINGASINFOWORKERSFINISH)
 	{
 		if (m_iInfoRunning == 0)
-		{		
+		{
 			Log("GameStats::CheckTermination() all gameinfoqueries are done!");
 			m_iQueryState = GSSTATE_WAITINGFORDB;
 		}

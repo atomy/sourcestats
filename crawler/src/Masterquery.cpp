@@ -6,6 +6,7 @@
 #include "Masterquery.h"
 
 #define FINGERPRINT_SIZE 6
+#define MQ_MAXTRIES 2
 
 using boost::asio::ip::udp;
 extern pthread_mutex_t muLog;

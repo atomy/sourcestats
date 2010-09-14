@@ -52,6 +52,8 @@
 		<Unit filename="GameInfoRequest.h" />
 		<Unit filename="GameStats.cpp" />
 		<Unit filename="GameStats.h" />
+		<Unit filename="GameStatsResult.cpp" />
+		<Unit filename="GameStatsResult.h" />
 		<Unit filename="GameserverEntry.cpp" />
 		<Unit filename="GameserverEntry.h" />
 		<Unit filename="GameserverInfo.cpp" />
@@ -66,6 +68,8 @@
 		<Unit filename="Masterserver.h" />
 		<Unit filename="MasterserverManager.cpp" />
 		<Unit filename="MasterserverManager.h" />
+		<Unit filename="PerformanceStats.cpp" />
+		<Unit filename="PerformanceStats.h" />
 		<Unit filename="SourceStats.cpp" />
 		<Unit filename="SourceStats.h" />
 		<Unit filename="ThreadFactory.cpp" />

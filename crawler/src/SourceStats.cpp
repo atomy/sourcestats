@@ -43,8 +43,9 @@ void SourceStats::Init( void )
 {
 	Log("SourceStats::main() Adding Masterservers...");
 
-    gMasterManager->AddServer( "216.207.205.99:27011" );
-    gMasterManager->AddServer( "216.207.205.98:27011" );
+    gMasterManager->AddServer( "72.165.61.153:27015" );
+    gMasterManager->AddServer( "63.234.149.83:27011" );
+    gMasterManager->AddServer( "63.234.149.90:27011" );
 
 	const char* sGameName = "dystopia";
 	char log[128];
@@ -78,10 +79,10 @@ void* SourceStats::ThreadDatabase( void *arg )
 	SourceStats* pParent = pArgs->GetParent();
 	GameStats* pStats = pArgs->GetGameStats();
 
-	DBProcessor* pDB = new DBProcessor( pParent, pStats );	
+	DBProcessor* pDB = new DBProcessor( pParent, pStats );
 	pDB->SetTimeout( TIMEOUT_DBPROCESSOR );
 	pDB->Init();
-	//pDB->SetParentClassName( "SourceStats" );	
+	//pDB->SetParentClassName( "SourceStats" );
 	pDB->EntryPoint();
 }
 
@@ -113,7 +114,7 @@ void SourceStats::CheckFinishedGamestats( void )
 }
 
 void SourceStats::CheckFinishedDBProcessors( void )
-{	
+{
 	Log("CheckFinishedDBProcessors() Looking for finished DBProcessors...");
 	vector<ThreadedRequest*>::iterator it = m_vThreads.begin();
 
@@ -135,9 +136,13 @@ void SourceStats::CheckFinishedDBProcessors( void )
 void SourceStats::HandlefinishedStats( GameStats* pStats )
 {
 	pStats->SetState(GSSTATE_PROCDB);
-	pthread_t tThread;
-	MMThreadArgs2* pThreadArgs = new MMThreadArgs2( this, pStats );
-	int ret = pthread_create( &tThread, NULL, SourceStats::ThreadDatabase, pThreadArgs );
+	GameStatsResult* pResult = new GameStatsResult(pStats);
+	pResult->ProcessGameStats();
+	pResult->PrintSummary();
+	delete pResult;
+//	pthread_t tThread; // temporary disabled
+//	MMThreadArgs2* pThreadArgs = new MMThreadArgs2( this, pStats );
+//	int ret = pthread_create( &tThread, NULL, SourceStats::ThreadDatabase, pThreadArgs );
 }
 
 void SourceStats::Loop( void )
@@ -147,8 +152,14 @@ void SourceStats::Loop( void )
 		CheckFinishedGamestats();
 		CheckFinishedDBProcessors();
         CheckThreads();				// for stats only, check for finished threads
-		Log("SourceStats::Loop()");		
+		Log("SourceStats::Loop()");
         sleep(5);
+
+		if ( GetActiveThreadNo() == 0 )
+		{
+			Log("SourceStats::Loop() yo all of our kids are dead or we've killed them, lets exit quietly");
+			exit(0);
+		}
     }
 }
 

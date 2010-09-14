@@ -11,9 +11,9 @@ using namespace std;
 extern pthread_mutex_t muLog;
 
 #define DB_HOST "localhost"
-#define DB_USER "crawler"
-#define DB_NAME "crawler"
-#define DB_PASS "crawler"
+#define DB_USER "sourcestats"
+#define DB_NAME "sourcestats"
+#define DB_PASS "sourcestats"
 
 
 DBProcessor::DBProcessor( ThreadFactory* pFactory, GameStats* pStats ) : ThreadedRequest( pFactory ), m_pGameStats( pStats )
@@ -54,33 +54,35 @@ void DBProcessor::Setup()
 
 void DBProcessor::ProcessToDatabase( void )
 {
-	while(DataLeft())
-	{
-		if(!m_sqlConn.connected())
-		{
-			Log("DBProcessor::ProcessToDatabase() database connection not active but data waiting to process!");
-			break;
-		}
+    BuildProcessQuery(true);
 
-		if (!BuildProcessQuery())
-			return;
-
-		std::cout << "trying to query: " << m_sQryString << std::endl;
-		mysqlpp::Query query = m_sqlConn.query(m_sQryString);
-
-		if(query.exec())
-		{
-			char sLog[2048];
-			snprintf(sLog, 2048, "DBProcessor::ProcessToDatabase() query '%s' successful!", m_sQryString);
-			Log(sLog);
-		}
-		else
-		{
-			char sLog[2048];
-			snprintf(sLog, 2048, "DBProcessor::ProcessToDatabase() query failed while trying to query '%s'! error: '%s'", m_sQryString, query.error());
-			Log(sLog);
-		}
-	}
+//	while(DataLeft())
+//	{
+//		if(!m_sqlConn.connected())
+//		{
+//			Log("DBProcessor::ProcessToDatabase() database connection not active but data waiting to process!");
+//			break;
+//		}
+//
+//		if (!BuildProcessQuery())
+//			return;
+//
+//		std::cout << "trying to query: " << m_sQryString << std::endl;
+//		mysqlpp::Query query = m_sqlConn.query(m_sQryString);
+//
+//		if(query.exec())
+//		{
+//			char sLog[2048];
+//			snprintf(sLog, 2048, "DBProcessor::ProcessToDatabase() query '%s' successful!", m_sQryString);
+//			Log(sLog);
+//		}
+//		else
+//		{
+//			char sLog[2048];
+//			snprintf(sLog, 2048, "DBProcessor::ProcessToDatabase() query failed while trying to query '%s'! error: '%s'", m_sQryString, query.error());
+//			Log(sLog);
+//		}
+//	}
 
 	Log("DBProcessor::ProcessToDatabase() no data left!");
 	m_iState = DBSTATE_DONE;
@@ -92,7 +94,7 @@ bool DBProcessor::DataLeft()
     return m_bDataLeft;
 }
 
-bool DBProcessor::BuildProcessQuery()
+bool DBProcessor::BuildProcessQuery( bool bPrintStatsOnly /* = false */)
 {
 	if(!DataLeft())
 		return false;
@@ -100,74 +102,31 @@ bool DBProcessor::BuildProcessQuery()
 	int iPlayers, iBots, iMaxplayers, iLinux, iWindows, iDedicated, iListen, iStv, iSecure, iInsecure, iPassworded, iNotPassworded, iServers;
 	iPlayers = iBots = iMaxplayers = iLinux = iWindows = iDedicated = iListen = iStv = iSecure = iInsecure = iPassworded = iNotPassworded = iServers = 0;
 
-	for(GameserverInfo* pInfo = m_pGameStats->GetNextServer(); pInfo; pInfo = m_pGameStats->GetNextServer())
-	{
-		iServers++;
+    m_bDataLeft = false;
 
-		if(pInfo->m_cPlayercount <= 255)
-			iPlayers += pInfo->m_cPlayercount;
-
-		if(pInfo->m_cBotcount <= 255)
-			iBots += pInfo->m_cBotcount;
-
-		if(pInfo->m_cMaxplayers <= 255)
-			iMaxplayers += pInfo->m_cMaxplayers;
-
-		if(pInfo->m_cOS == 'l')
-			iLinux++;
-		else if(pInfo->m_cOS == 'w')
-			iWindows++;
-
-		if(pInfo->m_cDedicated == 'l')
-			iListen++;
-		else if(pInfo->m_cDedicated == 'd')
-			iDedicated++;
-		else if(pInfo->m_cDedicated == 'p')
-			iStv++;
-
-		if(pInfo->m_cISSecure == 1)
-			iSecure++;
-		else
-			iInsecure++;
-
-		if(pInfo->m_cISPassworded == 1)
-			iPassworded++;
-		else
-			iNotPassworded++;
-	}
-
-	std::cout << "==============================================================================" << std::endl;
-	std::cout << "==============================================================================" << std::endl;
-	std::cout << "Finished Stats for game '" << m_pGameStats->GetGameName() << "':" << std::endl;
-	std::cout << "=== PLAYER STATISTICS ========================================================" << std::endl;
-	std::cout << "players(+bots): " << iPlayers << " bots: " << iBots << " maxplayers: " << iMaxplayers << std::endl << std::endl;
-
-	std::cout << "=== SERVER STATISTICS ========================================================" << std::endl;
-	std::cout << "servers: " << iServers << " linux: " << iLinux << " windows: " << iWindows << std::endl;
-	std::cout << "dedicated: " << iDedicated << " listen: " << iListen << " stv: " << iStv << std::endl;
-	std::cout << "secure: " << iSecure << " insecure: " << iInsecure << " passworded: " << iPassworded << " unpassworded: " << iNotPassworded << std::endl << std::endl;
-	std::cout << "==============================================================================" << std::endl;
-	std::cout << "==============================================================================" << std::endl;
 	//if (!pInfo)
 	//{
-	m_bDataLeft = false;
+
 	//	return false;
 	//}
 
 	//// TODO, escape all strings
-	//char sSaveServername[512];
-	//size_t strsize = strnlen(pInfo->m_sServername.c_str(), 512);
-	////mysqlpp::DBDriver* pDriver = m_sqlConn.driver();
-	//std::cout << "trying to escape: " << pInfo->m_sServername << std::endl;
-	////mysql_real_escape_string(m_sqlConn, sSaveServername, pInfo->m_sServername, 512)
-	//mysqlpp::DBDriver::escape_string_no_conn(sSaveServername, pInfo->m_sServername.c_str(), strsize);
-	//std::cout << "escaped!: " << sSaveServername << std::endl;
-
+//	char sSaveServername[512];
+//	size_t strsize = strnlen(pInfo->m_sServername.c_str(), 512);
+//	////mysqlpp::DBDriver* pDriver = m_sqlConn.driver();
+//	//std::cout << "trying to escape: " << pInfo->m_sServername << std::endl;
+//	////mysql_real_escape_string(m_sqlConn, sSaveServername, pInfo->m_sServername, 512)
+//	mysqlpp::DBDriver::escape_string_no_conn(sSaveServername, pInfo->m_sServername.c_str(), strsize);
+//	std::cout << "escaped!: " << sSaveServername << std::endl;
 //	snprintf(m_sQryString, 1024, "INSERT INTO `crawler`.`rawstats` \
 //( `id`, `type`, `version`, `servername`, `currentmap`, `gamedir`, `gamedesc`, `appid`, `playercount`, `maxplayers`, `botcount`, `dedicated`, `os`, `ispassworded`, `issecure`, `gameversion` ) \
 //VALUES ( NULL , '%u', '%u', '%s', '%s', '%s', '%s', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%s' );", pInfo->m_cType, pInfo->m_cVersion, sSaveServername, pInfo->m_sCurrentmap.c_str(), pInfo->m_sGamedir.c_str(), pInfo->m_sGamedesc.c_str(), pInfo->m_iAppid, pInfo->m_cPlayercount, pInfo->m_cMaxplayers, pInfo->m_cBotcount, pInfo->m_cDedicated, pInfo->m_cOS, pInfo->m_cISPassworded, pInfo->m_cISSecure, pInfo->m_sGameversion.c_str() );
 
-	return false;
+//	snprintf(m_sQryString, 1024, "INSERT INTO `sourcestats`.`gamestats` \
+//		( `gamename`, `players`, `bots`, `maxplayers`, `servers`, `linux`, `windows`, `dedicated`, `listen`, `stv`, `secure`, `insecure`, `passworded`, `unpassworded` ) \
+//		VALUES ( '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d' );", m_pGameStats->GetGameName(), iPlayers-iBots, iBots, iMaxplayers, iServers, iLinux, iWindows, iDedicated, iListen, iStv,
+//			iSecure, iInsecure, iPassworded, iNotPassworded );
+	return true;
 }
 
 void DBProcessor::Loop( void )
