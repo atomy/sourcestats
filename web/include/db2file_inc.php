@@ -2,45 +2,55 @@
 require_once "include/config_inc.php";
 require_once "include/func_inc.php";
 
-define( DEBUG, false );
+define( "DEBUG", false );
 
-function SetupDB()
-{
-	$dblink = mysql_connect( MYSQL_HOST, MYSQL_USER, MYSQL_PW );
-	
-	if ( !$dblink || !mysql_select_db(MYSQL_DB) )
-		die("mysql setup error: ".mysql_error());
-		
-	return $dblink;
-}
 
-function GetLastDayOfMonth($year, $month)
-{
-	for ($day = 28; $day < 32; $day++) 
+function getLastDayOfMonth($year, $month)
+{	
+	for ($day = 28; $day < 33; $day++) 
 	{
 		if (!checkdate($month, $day, $year)) 
 			return $day-1;
-	}
+	}	
+	//die("getLastDayOfMonth() errored - year: $year month: $month<br/>");
 }
 
-// 2010-09-10
-// %Y-%m-%d
-function DayStats2File( $dblink, $year, $month, $day, $type, $force = false )
-{	
-	if($year == date('Y') && $month == date('m') && $day == date('j'))
-		$force = true;
+class DB2File {
+public static function stats2File($year, $month, $day, $type, $force = false)
+{
+	$dblink =& setupDB();
 	
 	if($type == TYPE_HOURLY)
 	{
+		if($year == date('Y') && $month == date('m') && $day == date('j')) {
+			$force = true;
+		}
 		$fname = "stats/hourly_".$year."-".$month."-".$day.".txt";
 		$_startTime = mktime(0, 0, 0, $month, $day, $year);
 		$_endTime = $_startTime + 3600*24;
 	}
 	else if ($type == TYPE_DAILY)
 	{
+		if($year == date('Y') && $month == date('m')) {
+			$force = true;
+		}		
 		$fname = "stats/daily_".$year."-".$month.".txt";
-		$_startTime = mktime(0, 0, 0, $month, 0, $year);
-		$_endTime = $_startTime + 3600*24*GetLastDayOfMonth($year, $month);
+		$_startTime = mktime(1, 1, 1, $month, 1, $year);
+		$_endTime = $_startTime + 3600*24*getLastDayOfMonth($year, 12);
+	}
+	else if ($type == TYPE_MONTHLY)
+	{
+		if($year == date('Y')) {
+			$force = true;
+		}
+		$fname = "stats/monthly_".$year."-".$month.".txt";
+		$_startTime = mktime(1, 1, 1, 1, 1, $year);
+		
+		if(date("L") == 1)
+			$_endTime = $_startTime + 3600*24*366;
+		else
+			$_endTime = $_startTime + 3600*24*365;		
+		
 	}
 	else
 		die("invalid type!");
@@ -52,11 +62,16 @@ function DayStats2File( $dblink, $year, $month, $day, $type, $force = false )
 		return true;
 	
 	$qry = "SELECT * FROM gamestats WHERE gamename = \"dystopia\" AND time < '".$endTime."' AND time > '".$startTime."' ORDER BY time;";
+	if(DEBUG)
+		echo "SQL: ".$qry."<br>";
 	$res = mysql_query( $qry, $dblink );
 	
 	// no data, i'm sorrey!
-	if (mysql_affected_rows() == 0)
+	if (mysql_affected_rows() == 0) {
+		if(DEBUG)
+			echo "empty result!<br/>";
 		return false;
+	}
 		
 	$handle = fopen($fname, "w");
 	
@@ -82,8 +97,9 @@ function DayStats2File( $dblink, $year, $month, $day, $type, $force = false )
 	
 	if(DEBUG)
 		echo "done writing to '".$fname."'";
-		
+				
 	return true;
+}
 }
 
 ?>

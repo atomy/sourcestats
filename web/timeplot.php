@@ -1,9 +1,11 @@
-<?
-require_once "include/func_inc.php";
+<?php
+    require_once "include/func_inc.php";
 ?>
+
 var timeplot;
 
 function onLoad() {
+
   var eventSource = new Timeplot.DefaultEventSource();
 
   var eventSource2 = new Timeplot.DefaultEventSource();
@@ -12,12 +14,12 @@ function onLoad() {
     gridColor: new Timeplot.Color("#000000"),
     axisLabelsPlacement: "top"
   });
-  
+
   var valueGeometry = new Timeplot.DefaultValueGeometry({
     gridColor: "#000000",
-	axisLabelsPlacement: "right"
+	axisLabelsPlacement: "left"
   });  
-  
+
   var plotInfo = [
     Timeplot.createPlotInfo({
       id: "plot1",
@@ -35,7 +37,8 @@ function onLoad() {
       lineColor: "#03212E"
 	})
   ];
-  <?
+
+<?php
   $year = floor($_REQUEST['year']);
   $month = floor($_REQUEST['month']);
   $day = floor($_REQUEST['day']);
@@ -46,20 +49,22 @@ function onLoad() {
   
   if (!IsDateValid($day, $month, $year))
 	die("invalid date");
-  
   if ( $type == TYPE_HOURLY )
 	$fname = "stats/hourly_".$year."-".$month."-".$day.".txt";
   else if ($type == TYPE_DAILY )
 	$fname = "stats/daily_".$year."-".$month.".txt";
+  else if ($type == TYPE_MONTHLY )
+	$fname = "stats/monthly_".$year."-".$month.".txt";	
   else
     die("unknown type!");
-  ?>
-  timeplot = Timeplot.create(document.getElementById("hourly"), plotInfo);
-  timeplot.loadText("<?=$fname?>", ",", eventSource);  
-  <!-- timeplot.loadXML("events.xml", eventSource2); TODO, hide events which are out of range, otherwise they break our graph! :( -->
+?>
+
+  timeplot = Timeplot.create(document.getElementById("plotter"), plotInfo);
+  timeplot.loadText("<?php echo $fname;?>", ",", eventSource);
 }
 
 var resizeTimerID = null;
+
 function onResize() {
     if (resizeTimerID == null) {
         resizeTimerID = window.setTimeout(function() {

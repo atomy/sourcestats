@@ -1,10 +1,16 @@
 <?php
 
-define(TYPE_START, 0);
-define(TYPE_HOURLY, 1);
-define(TYPE_DAILY, 2);
-define(TYPE_MONTHLY, 3);
-define(TYPE_LAST, 4);
+require_once "include/config_inc.php";
+
+function setupDB()
+{
+	$dblink = mysql_connect( MYSQL_HOST, MYSQL_USER, MYSQL_PW );
+	
+	if ( !$dblink || !mysql_select_db(MYSQL_DB) )
+		die("mysql setup error: ".mysql_error());
+		
+	return $dblink;
+}
 
 // get unix time range for given month
 function GetSecondsOfMonth( $year, $month )
