@@ -18,7 +18,7 @@ function getLastDayOfMonth($year, $month)
 class DB2File {
 public static function stats2File($year, $month, $day, $type, $force = false)
 {
-	$dblink =& setupDB();
+	$dblink = setupDB();
 	
 	if($type == TYPE_HOURLY)
 	{

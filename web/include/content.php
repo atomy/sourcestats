@@ -42,7 +42,7 @@ Plotting amount of players over time for a given Source-Mod (all times are in GM
     }
     
     public static function printPage() {
-        $datedRequest =& Util::generateDatedRequest();
+        $datedRequest = Util::generateDatedRequest();
         if($datedRequest) {            
             self::printRequestedPage($datedRequest);
         } else {
@@ -123,7 +123,7 @@ Plotting amount of players over time for a given Source-Mod (all times are in GM
         <?php
         $curYear = date("Y");
         for($i=2010; $i<=$curYear; $i++) {        
-            if($i == $curDay) {
+            if($i == $curYear) {
         ?>
         <option value="<?php echo $i;?>" selected="selected"><?php echo $i;?></option>
         <?php
