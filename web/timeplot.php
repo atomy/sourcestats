@@ -1,5 +1,6 @@
 <?php
     require_once "include/func_inc.php";
+	require_once "include/util.php";
 ?>
 
 var timeplot;
@@ -39,22 +40,30 @@ function onLoad() {
   ];
 
 <?php
+	if (!isset($_REQUEST['year']) || !isset($_REQUEST['month']) || !isset($_REQUEST['day']) || !isset($_REQUEST['type']) || !isset($_REQUEST['modname']))
+		die("missing args");
+		
   $year = floor($_REQUEST['year']);
   $month = floor($_REQUEST['month']);
   $day = floor($_REQUEST['day']);
   $type = floor($_REQUEST['type']);
+  $gameName = $_REQUEST['modname'];
   
   if (!IsTypeValid($type))
 	die("invalid type");
   
   if (!IsDateValid($day, $month, $year))
 	die("invalid date");
+	
+	if(!Util::isModNameValid($gameName))
+		die("invalid gameName");
+	
   if ( $type == TYPE_HOURLY )
-	$fname = "stats/hourly_".$year."-".$month."-".$day.".txt";
+	$fname = "stats/".$gameName."hourly_".$year."-".$month."-".$day.".txt";
   else if ($type == TYPE_DAILY )
-	$fname = "stats/daily_".$year."-".$month.".txt";
+	$fname = "stats/".$gameName."daily_".$year."-".$month.".txt";
   else if ($type == TYPE_MONTHLY )
-	$fname = "stats/monthly_".$year."-".$month.".txt";	
+	$fname = "stats/".$gameName."monthly_".$year."-".$month.".txt";	
   else
     die("unknown type!");
 ?>

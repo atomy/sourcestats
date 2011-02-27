@@ -26,7 +26,7 @@ class Content
     <title>Source Mod Stats</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <script src="http://api.simile-widgets.org/timeplot/1.1/timeplot-api.js" type="text/javascript"></script>
-    <script src="timeplot.php<?php echo "?day=".$datedRequest->getDay()."&month=".$datedRequest->getMonth()."&year=".$datedRequest->getYear()."&type=".$datedRequest->getType();?>" type="text/javascript"></script>
+    <script src="timeplot.php<?php echo "?modname=".$datedRequest->getModName()."&day=".$datedRequest->getDay()."&month=".$datedRequest->getMonth()."&year=".$datedRequest->getYear()."&type=".$datedRequest->getType();?>" type="text/javascript"></script>
 </head>
         <?php
     }
@@ -34,7 +34,7 @@ class Content
     public static function printIntro() {
         ?>
 <div id="header" style="text-align: center; margin-top: 20px;">
-<img src="images/source_engine.png" alt="source engine logo" style="width: 325px; height: 100px;"/>
+<a href="<?php echo $_SERVER['PHP_SELF'];?>"><img src="images/source_engine.png" alt="source engine logo" style="border: none; width: 325px; height: 100px;"/></a>
 <h2 style="margin-top: 0px;">Mod Statistics</h2>
 Plotting amount of players over time for a given Source-Mod (all times are in GMT+1)
 <hr/>
@@ -43,18 +43,20 @@ Plotting amount of players over time for a given Source-Mod (all times are in GM
     
     public static function printPage() {
         $datedRequest = Util::generateDatedRequest();
+        
         if($datedRequest) {            
-            self::printRequestedPage($datedRequest);
+            self::printRequestedPage($datedRequest, $gameRequest);
         } else {
             self::printWelcomePage();
         }
     }
     
-    public static function printRequestedPage(&$datedRequest) {        
-        $success = DB2File::stats2File($datedRequest->getYear(), $datedRequest->getMonth(), $datedRequest->getDay(), $datedRequest->getType());
+    public static function printRequestedPage(&$datedRequest, &$gameRequest) {        
+        $success = DB2File::stats2File($datedRequest->getModName(), $datedRequest->getYear(), $datedRequest->getMonth(), $datedRequest->getDay(), $datedRequest->getType());
         
-        if(!$success)
-            die("Content::printRequestedPage() no data!");
+        if(!$success) {
+            die("Sorry, no data available for the given timeframe! <a href=\"".$_SERVER['PHP_SELF']."\">back</a>");            
+        }
             
         self::printRequestedHeader($datedRequest);
         self::printRequestedBody($datedRequest);
@@ -74,8 +76,16 @@ Plotting amount of players over time for a given Source-Mod (all times are in GM
 <form action="#">
     <p>
     choose mod:
-    <select name="modname">        
-        <option value="dystopia" selected="selected">dystopia</option>  
+    <select name="modname">
+        <?php
+            $gamez = Util::getAvailGames();
+            $i=0;
+            foreach($gamez as $id=>$gameName) {                
+                ?>                
+                <option value="<?php echo $gameName;?>"><?php echo $gameName;?></option>
+                <?php
+            }
+        ?>        
     </select>
     
     <br/>

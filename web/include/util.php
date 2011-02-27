@@ -2,8 +2,11 @@
 
 require_once "config_inc.php";
 require_once "DatedRequest.php";
+require_once "db2file_inc.php";
 
 class Util {
+    private static $availGames = array();
+    
     public static function generateDatedRequest() {
         if(!isset($_REQUEST['type']))
             return null;
@@ -37,7 +40,7 @@ class Util {
             }
             
             $modname = "dystopia"; // default
-            if(isset($_REQUEST['modname']) && false) { // do not use, just 1
+            if(isset($_REQUEST['modname'])) {
                 if(self::isModNameValid($_REQUEST['modname'])) {
                     $modname = $_REQUEST['modname'];
                 }
@@ -47,6 +50,28 @@ class Util {
     }
     
     public function isModNameValid($modname) {
-        return true; // TODO
+        self::getAvailGames();
+            
+		// only allow a-z, A-Z, 0-9 as gamename, preg_match == 0 if valid
+		if (preg_match("/[^0-9A-Za-z]/", $modname) != 0) {
+            return false;
+		}
+        else if (array_search($modname, self::$availGames, false) !== false) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    private function generateAvailableGameNames() {
+        self::$availGames = DB2File::getAvailableGameNames();
+    }
+    
+    public function getAvailGames() {
+        if(count(self::$availGames) <= 0)
+            self::generateAvailableGameNames();
+            
+        return self::$availGames;
     }
 }
