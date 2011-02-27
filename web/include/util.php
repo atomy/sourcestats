@@ -28,8 +28,8 @@ class Util {
                     $month = $_REQUEST['month'];
                 }
             }
-            
-            $year = date("Y"); // default
+                    
+            $year = date("Y"); // default 
             if(isset($_REQUEST['year']) && is_numeric($_REQUEST['year'])) {
                 if($_REQUEST['year'] >= 2010 && $_REQUEST['year'] <= date("Y")) {
                     $year = $_REQUEST['year'];
