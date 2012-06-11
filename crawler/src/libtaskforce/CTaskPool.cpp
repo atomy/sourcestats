@@ -6,6 +6,8 @@
 
 using namespace std;
 
+#define class
+
 CTaskPool::CTaskPool(CTaskForce* pForce) : m_pTaskForce(pForce)
 {
 }
@@ -72,7 +74,7 @@ void CTaskPool::OnTaskCompleted(CTask* pTask)
   mDoneTasks.push(pTask);
   pthread_mutex_unlock(&muDoneTasks); // UNLOCK
 
-	m_pTaskForce->getThreadPool()->OnTaskCompleted(pTask);
+	//m_pTaskForce->getThreadPool()->OnTaskCompleted(pTask);
 }
 
 void CTaskPool::OnTaskStarted(CTask* pTask)
@@ -107,4 +109,9 @@ CTask* CTaskPool::getCompletedTask()
 	pthread_mutex_unlock(&muDoneTasks); // UNLOCK
 
 	return pTask;
+}
+
+bool CTaskPool::IsValidEvent( CTask* pTask )
+{
+	return true;
 }

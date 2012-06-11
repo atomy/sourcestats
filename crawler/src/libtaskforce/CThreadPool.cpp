@@ -74,6 +74,7 @@ void CThreadPool::SpawnThread()
 }
 
 // Warning, this has to be thread-safe!!
+// TODO, add some listeners here
 void CThreadPool::OnThreadExit(pthread_t threadId)
 {
 	char log[64];
@@ -148,6 +149,9 @@ void CThreadPool::OnTaskCompleted( CTask* pTask )
 	pWorker->setTask(NULL);
 }
 
+void CThreadPool::OnTaskStarted( CTask* pTask )
+{ }
+
 IDisplayStats* CThreadPool::getStats()
 {
 	return m_pTaskForce->getStats();
@@ -161,4 +165,9 @@ IDisplayLogger* CThreadPool::getLogger()
 int CThreadPool::getNumIdleThreads()
 {
 	return m_iIdleThreads;
+}
+
+bool CThreadPool::IsValidEvent( CTask* pTask )
+{
+	return true;
 }

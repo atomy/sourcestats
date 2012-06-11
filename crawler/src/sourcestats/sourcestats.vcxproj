@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CMasterQuery.cpp" />
+    <ClCompile Include="CMasterQueryHandler.cpp" />
     <ClCompile Include="CMasterQueryTask.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="testmain.cpp" />
@@ -21,6 +22,7 @@
     <ClInclude Include="CMasterQueryTask.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="CServAddr.h" />
+    <ClInclude Include="CMasterQueryHandler.h" />
     <ClInclude Include="timediff.h" />
   </ItemGroup>
   <ItemGroup>

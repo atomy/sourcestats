@@ -6,6 +6,7 @@
 #include "CTask.h"
 #include "CThreadPool.h"
 #include "CTaskForceStats.h"
+#include "ITaskForceEventHandler.h"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ class CTask;
 class CThreadPool;
 class CTaskForce;
 
-class CTaskPool
+class CTaskPool : public ITaskForceEventHandler
 {
 public:
   CTaskPool(CTaskForce* pForce);
@@ -26,8 +27,10 @@ public:
   //void									handleCompletedTasks();
 	CTask*								getCompletedTask();
 
-  void									OnTaskCompleted(CTask*);
-  void									OnTaskStarted(CTask*);
+  virtual void					OnTaskCompleted(CTask*);
+  virtual void					OnTaskStarted(CTask*);
+	virtual bool					IsValidEvent(CTask* pTask);
+
 	IDisplayStats*				getStats();
 
 private:

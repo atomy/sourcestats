@@ -14,8 +14,11 @@ CMasterQuery::CMasterQuery(const char* strHostname, const char* strPort)
 
 CMasterQuery::~CMasterQuery()
 {
-	// TODO, remove our list elements
-	m_pServers.clear();
+	while(!m_pServers.empty()) {
+		CServAddr* pServ = m_pServers.top();
+		m_pServers.pop();
+		delete pServ;
+	}
 
 	freeaddrinfo(m_pServerinfo);
 	freeaddrinfo(m_pSelectedServ);
@@ -106,7 +109,7 @@ int CMasterQuery::buildSendBuffer(CServAddr& addr, unsigned char* buf, size_t si
 	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
 
 	//const char* seed = "0.0.0.0:0";
-	const char* filter = "\\gamedir\\cstrike\\napp\\500";
+	const char* filter = "\\gamedir\\Dystopia\\napp\\500";
 	const int iSeedStart = 2;
 	const int iSeedEnd = strlen(seed)+iSeedStart-1;
 	const int iFilterStart = iSeedEnd+1;
@@ -163,9 +166,13 @@ CServAddr CMasterQuery::parseData()
 		snprintf(log, 128, "server: '%s'", buf);
 		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
 
-		// TODO, add entry to list
+		m_pServers.push(new CServAddr(lastaddr));
 	}
 
-	// TODO, remove lastaddr from list
+	m_pServers.pop();
+
+	snprintf(log, 128, "parseData() completed we have '%d' servers now in the list", m_pServers.size());
+	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+
 	return lastaddr;
 }

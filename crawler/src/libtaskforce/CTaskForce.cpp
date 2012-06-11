@@ -11,14 +11,20 @@
 
 #define TASKFORCE_SLEEP_DEFAULT_MS 100
 
+
 using namespace std;
 
 CTaskForce::CTaskForce(const int maxTasks, const int maxThreads)
 {
   m_pTaskPool = new CTaskPool(this);
 	m_pThreadPool = new CThreadPool(this);
+
   pthread_mutex_init(&muStatsChange, NULL);
 	pthread_mutex_init(&muLoggerChange, NULL);
+	pthread_mutex_init(&m_muEventHandlers, NULL);
+
+	InstallEventHandler(m_pTaskPool);
+	InstallEventHandler(m_pThreadPool);
 }
 
 CTaskForce::~CTaskForce()
@@ -64,7 +70,6 @@ void CTaskForce::run()
 
 void CTaskForce::update(long mtime)
 {
-  //m_pTaskPool->handleCompletedTasks();
 	m_pTaskPool->assignTasks();
 }
 
@@ -147,10 +152,35 @@ CTask* CTaskForce::getNextCompletedTask()
 
 void CTaskForce::OnTaskStarted(CTask* pTask)
 {
-	m_pTaskPool->OnTaskStarted(pTask);
+	pthread_mutex_lock(&m_muEventHandlers); // LOCK
+	// call all registered eventhandlers
+	vector<ITaskForceEventHandler*>::iterator it = m_pEventHandlers.begin();
+	while(it < m_pEventHandlers.end()) {
+		ITaskForceEventHandler* pHandler = (*it);
+		if(!pHandler->IsValidEvent(pTask))
+			continue;
+		pHandler->OnTaskStarted(pTask);
+		it++;
+	}
+	pthread_mutex_unlock(&m_muEventHandlers); // UNLOCK
 }
 
 void CTaskForce::OnTaskCompleted(CTask* pTask)
 {
-	m_pTaskPool->OnTaskCompleted(pTask);
+	pthread_mutex_lock(&m_muEventHandlers); // LOCK
+	// call all registered eventhandlers
+	vector<ITaskForceEventHandler*>::iterator it = m_pEventHandlers.begin();
+	while(it < m_pEventHandlers.end()) {
+		ITaskForceEventHandler* pHandler = (*it);
+		pHandler->OnTaskCompleted(pTask);
+		it++;
+	}
+	pthread_mutex_unlock(&m_muEventHandlers); // UNLOCK
+}
+
+void CTaskForce::InstallEventHandler(ITaskForceEventHandler* pHandler)
+{
+	pthread_mutex_lock(&m_muEventHandlers); // LOCK
+	m_pEventHandlers.push_back(pHandler);
+	pthread_mutex_unlock(&m_muEventHandlers); // UNLOCK
 }

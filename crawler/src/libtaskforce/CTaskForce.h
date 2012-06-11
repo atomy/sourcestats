@@ -7,6 +7,8 @@
 #include "CTaskForceStats.h"
 #include "libcursesfrontend/CDisplayLogger.h"
 #include "CTaskPool.h"
+#include <vector>
+#include "ITaskForceEventHandler.h"
 
 #define TF_VERSION "0.0.1"
 
@@ -42,8 +44,10 @@ public:
 	virtual CTaskPool*									getTaskPool();
 	virtual CThreadPool*								getThreadPool();
 
-	virtual void												OnTaskStarted(CTask* pTask);
-	virtual void												OnTaskCompleted(CTask* pTask);	
+	void																OnTaskStarted(CTask* pTask);
+	void																OnTaskCompleted(CTask* pTask);	
+
+	void																InstallEventHandler(ITaskForceEventHandler* pHandler);
 
 private:
   CTaskPool*													m_pTaskPool;
@@ -59,6 +63,9 @@ private:
 	pthread_t														m_iThread;
 
 	bool																m_bRun;
+
+	vector<ITaskForceEventHandler*>			m_pEventHandlers;
+	pthread_mutex_t											m_muEventHandlers;
 };
 
 #endif // CTASKFORCE_H

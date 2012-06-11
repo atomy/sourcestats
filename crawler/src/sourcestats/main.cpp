@@ -17,6 +17,7 @@
 #include "libcursesfrontend/IDisplayLogger.h"
 #include "libtaskforce/CDefaultTask.h"
 #include "CMasterQueryTask.h"
+#include "CMasterQueryHandler.h"
 
 #define STATS_VERSION "0.0.1"
 
@@ -37,18 +38,23 @@ CTaskForce* g_pTaskForce = new CTaskForce(g_iMaxTasks, g_iMaxThreads);
 // setup the frontend
 CCursesFrontend* g_pFrontend = new CCursesFrontend();
 
+// handler for our MasterQuery tasks
+CMasterQueryHandler* g_pMasterHandler = new CMasterQueryHandler();
+
 bool bShuttingDown = false;
 
-void handleTask(CTask* pTask) {
-	g_pLogger->AddLog("main", __FUNCTION__, "handling completed task!");
-	delete pTask;
-}
+//void handleTask(CTask* pTask) {
+//	g_pLogger->AddLog("main", __FUNCTION__, "handling completed task!");
+//	delete pTask;
+//}
 
 void cleanup() {
 	delete g_pLogger;
 	delete g_pStats;
 	delete g_pFrontend;
 	delete g_pTaskForce;
+	delete g_pMasterHandler;
+
 	g_pLogger = NULL;
 	g_pStats = NULL;
 	g_pFrontend = NULL;
@@ -106,6 +112,7 @@ int main(int argc, char **argv) {
 
 	g_pTaskForce->setStats(g_pStats);
 	g_pTaskForce->setLogger(g_pLogger);
+	g_pTaskForce->InstallEventHandler(g_pMasterHandler);
 
 	IDisplayStats* pStats = g_pTaskForce->getStats();
 	if(pStats->getValue(JOBS_MAX) > pStats->getValue(JOBS_WAITING)) {
@@ -127,10 +134,10 @@ int main(int argc, char **argv) {
 	// loop
 	while(1) {
 		//g_pLogger->AddLog("main", __FUNCTION__, "handling tasks...");
-		for(CTask* pTask = g_pTaskForce->getNextCompletedTask(); pTask != NULL; pTask = g_pTaskForce->getNextCompletedTask()) {
-			g_pLogger->AddLog("main", __FUNCTION__, "found task! gonna handle it...");
-			handleTask(pTask);
-		}
+		//for(CTask* pTask = g_pTaskForce->getNextCompletedTask(); pTask != NULL; pTask = g_pTaskForce->getNextCompletedTask()) {
+		//	g_pLogger->AddLog("main", __FUNCTION__, "found task! gonna handle it...");
+		//	handleTask(pTask);
+		//}
 		usleep(1000*MAIN_SLEEP_DEFAULT_MS);
 	}
 

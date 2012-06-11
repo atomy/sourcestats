@@ -13,12 +13,14 @@ class CTask
 public:
 	CTask();
 
-  virtual void run() = 0;
-  virtual void OnTaskAssigned(CWorker* pInfo);
-  virtual void OnTaskCompleted();
-  virtual void OnTaskStarted();
+  virtual void						run() = 0;
+  virtual void						OnTaskAssigned(CWorker* pInfo);
 
-  CWorker* getWorker() { return m_pWorker; }
+  virtual CWorker*				getWorker() { return m_pWorker; }
+
+protected:
+	virtual void						OnTaskCompleted();
+	virtual void						OnTaskStarted();
 
 private:
   CWorker* m_pWorker;

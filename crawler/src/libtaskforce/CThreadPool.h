@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include "CTaskForce.h"
 #include "libcursesfrontend/CDisplayLogger.h"
+#include "ITaskForceEventHandler.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ class CTask;
 class CWorker;
 class CTaskForce;
 
-class CThreadPool
+class CThreadPool : public ITaskForceEventHandler
 {
 public:
   CThreadPool(CTaskForce*);
@@ -28,7 +29,11 @@ public:
   static	void						OnThreadExit(pthread_t);
   void										RemoveThread(pthread_t);
   bool										assignTask(CTask* t);
-	void										OnTaskCompleted( CTask* pTask );
+
+	virtual void						OnTaskCompleted( CTask* pTask );
+	virtual void						OnTaskStarted( CTask* pTask );
+	virtual bool						IsValidEvent(CTask* pTask);
+
 	IDisplayStats*					getStats();
 	IDisplayLogger*					getLogger();
 	int getNumIdleThreads();

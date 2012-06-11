@@ -19,6 +19,7 @@
     <ClInclude Include="CTaskPool.h" />
     <ClInclude Include="CThreadPool.h" />
     <ClInclude Include="CWorker.h" />
+    <ClInclude Include="ITaskForceEventHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CDefaultTask.cpp" />

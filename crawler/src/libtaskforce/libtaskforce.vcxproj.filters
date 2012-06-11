@@ -39,6 +39,9 @@
     <ClInclude Include="CTaskForceLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ITaskForceEventHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CTask.cpp">

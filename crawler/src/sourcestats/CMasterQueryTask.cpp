@@ -32,6 +32,7 @@ CMasterQueryTask::~CMasterQueryTask()
 
 void CMasterQueryTask::run()
 {
+	// callback
 	OnTaskStarted();
 	
 	g_pLogger->AddLog("CMasterQueryTask", __FUNCTION__, "doing stuff...");

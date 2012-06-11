@@ -6,6 +6,7 @@ CDefaultTask::CDefaultTask() : CTask()
 
 void CDefaultTask::run()
 {
+	// callback
   OnTaskStarted();
 
   // testing

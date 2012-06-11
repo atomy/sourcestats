@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "libcursesfrontend/IDisplayLogger.h"
+#include <stack>
 
 #define RECVBUF_SIZE 8192
 #define SENDBUFFER_SIZE 128
@@ -30,12 +31,12 @@ private:
 
 	const char*								m_strMasterServerPort;
 	const char*								m_strMasterServerHostname;
-	vector<CServAddr*>				m_pServers;
 	int												m_iSocket;
 	int												m_iRecvBytes, m_iSentBytes;
 	struct addrinfo						*m_pServerinfo, *m_pSelectedServ;
 	unsigned char							m_strSendBuffer[SENDBUFFER_SIZE];
 	unsigned char							m_strRecvBuffer[RECVBUF_SIZE];
+	stack<CServAddr*>					m_pServers;
 };
 
 extern IDisplayLogger* g_pLogger;
