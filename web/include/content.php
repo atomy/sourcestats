@@ -13,19 +13,7 @@ class Content
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>Source Mod Stats</title>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />    
-<!-- Piwik -->
-<script type="text/javascript">
-var pkBaseURL = (("https:" == document.location.protocol) ? "https://piwik.jackinpoint.net/" : "http://piwik.jackinpoint.net/");
-document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
-</script><script type="text/javascript">
-try {
-var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
-piwikTracker.trackPageView();
-piwikTracker.enableLinkTracking();
-} catch( err ) {}
-</script><noscript><p><img src="http://piwik.jackinpoint.net/piwik.php?idsite=2" style="border:0" alt="" /></p></noscript>
-<!-- End Piwik Tracking Tag -->    
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 </head>
         <?php
     }
@@ -39,18 +27,6 @@ piwikTracker.enableLinkTracking();
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <script src="http://api.simile-widgets.org/timeplot/1.1/timeplot-api.js" type="text/javascript"></script>
     <script src="timeplot.php<?php echo "?modname=".$datedRequest->getModName()."&day=".$datedRequest->getDay()."&month=".$datedRequest->getMonth()."&year=".$datedRequest->getYear()."&type=".$datedRequest->getType();?>" type="text/javascript"></script>
-<!-- Piwik -->
-<script type="text/javascript">
-var pkBaseURL = (("https:" == document.location.protocol) ? "https://piwik.jackinpoint.net/" : "http://piwik.jackinpoint.net/");
-document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
-</script><script type="text/javascript">
-try {
-var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
-piwikTracker.trackPageView();
-piwikTracker.enableLinkTracking();
-} catch( err ) {}
-</script><noscript><p><img src="http://piwik.jackinpoint.net/piwik.php?idsite=2" style="border:0" alt="" /></p></noscript>
-<!-- End Piwik Tracking Tag -->    
 </head>
         <?php
     }
