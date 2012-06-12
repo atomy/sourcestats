@@ -1,4 +1,4 @@
-#include "CMasterQueryTask.h"
+#include "CGameQueryTask.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -17,28 +17,28 @@
 using namespace std;
 
 // TODO, get rid of it
-#define HOSTNAME "208.64.200.39"
-#define PORT "27011"
+#define HOSTNAME "74.82.47.38"
+#define PORT "27025"
 
-#define CNAME "CMasterQueryTask"
+#define CNAME "CGameQueryTask"
 
-CMasterQueryTask::CMasterQueryTask() : CTask()
+CGameQueryTask::CGameQueryTask() : CTask()
 {
-	m_pQuery = new CMasterQuery(HOSTNAME, PORT);
+	m_pQuery = new CGameQuery(HOSTNAME, PORT);
 }
 
-CMasterQueryTask::~CMasterQueryTask()
+CGameQueryTask::~CGameQueryTask()
 {
 	delete m_pQuery;
 }
 
-void CMasterQueryTask::run()
+void CGameQueryTask::run()
 {
 	// callback
 	OnTaskStarted();
-	
+
 	g_pLogger->AddLog(CNAME, __FUNCTION__, "doing stuff...");
-	
+
 	if(m_pQuery->init())
 		m_pQuery->doRequest();
 	else

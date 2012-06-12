@@ -157,9 +157,9 @@ void CTaskForce::OnTaskStarted(CTask* pTask)
 	vector<ITaskForceEventHandler*>::iterator it = m_pEventHandlers.begin();
 	while(it < m_pEventHandlers.end()) {
 		ITaskForceEventHandler* pHandler = (*it);
-		if(!pHandler->IsValidEvent(pTask))
-			continue;
-		pHandler->OnTaskStarted(pTask);
+		if(pHandler->IsValidEvent(pTask)) {
+			pHandler->OnTaskStarted(pTask);
+		}
 		it++;
 	}
 	pthread_mutex_unlock(&m_muEventHandlers); // UNLOCK
@@ -172,7 +172,9 @@ void CTaskForce::OnTaskCompleted(CTask* pTask)
 	vector<ITaskForceEventHandler*>::iterator it = m_pEventHandlers.begin();
 	while(it < m_pEventHandlers.end()) {
 		ITaskForceEventHandler* pHandler = (*it);
-		pHandler->OnTaskCompleted(pTask);
+		if(pHandler->IsValidEvent(pTask)) {
+			pHandler->OnTaskCompleted(pTask);
+		}		
 		it++;
 	}
 	pthread_mutex_unlock(&m_muEventHandlers); // UNLOCK

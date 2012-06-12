@@ -18,10 +18,13 @@
 #include "libtaskforce/CDefaultTask.h"
 #include "CMasterQueryTask.h"
 #include "CMasterQueryHandler.h"
+#include "CGameQueryTask.h"
+#include "CGameQueryHandler.h"
 
 #define STATS_VERSION "0.0.1"
 
 #define MAIN_SLEEP_DEFAULT_MS 500
+#define CNAME "main"
 
 using namespace std;
 
@@ -40,11 +43,12 @@ CCursesFrontend* g_pFrontend = new CCursesFrontend();
 
 // handler for our MasterQuery tasks
 CMasterQueryHandler* g_pMasterHandler = new CMasterQueryHandler();
+CGameQueryHandler* g_pGameHandler = new CGameQueryHandler();
 
 bool bShuttingDown = false;
 
 //void handleTask(CTask* pTask) {
-//	g_pLogger->AddLog("main", __FUNCTION__, "handling completed task!");
+//	g_pLogger->AddLog(CNAME, __FUNCTION__, "handling completed task!");
 //	delete pTask;
 //}
 
@@ -54,6 +58,7 @@ void cleanup() {
 	delete g_pFrontend;
 	delete g_pTaskForce;
 	delete g_pMasterHandler;
+	delete g_pGameHandler;
 
 	g_pLogger = NULL;
 	g_pStats = NULL;
@@ -113,12 +118,14 @@ int main(int argc, char **argv) {
 	g_pTaskForce->setStats(g_pStats);
 	g_pTaskForce->setLogger(g_pLogger);
 	g_pTaskForce->InstallEventHandler(g_pMasterHandler);
+	g_pTaskForce->InstallEventHandler(g_pGameHandler);
 
 	IDisplayStats* pStats = g_pTaskForce->getStats();
 	if(pStats->getValue(JOBS_MAX) > pStats->getValue(JOBS_WAITING)) {
-		bool ret = g_pTaskForce->AddTask(new CMasterQueryTask());
+		bool ret = g_pTaskForce->AddTask(new CGameQueryTask());
+		//bool ret = g_pTaskForce->AddTask(new CMasterQueryTask());
 		if(!ret) {
-			g_pLogger->AddLog("main", __FUNCTION__, "something went wrong during task setup");
+			g_pLogger->AddLog(CNAME, __FUNCTION__, "something went wrong during task setup");
 		}
 	}
 
@@ -133,9 +140,9 @@ int main(int argc, char **argv) {
 
 	// loop
 	while(1) {
-		//g_pLogger->AddLog("main", __FUNCTION__, "handling tasks...");
+		//g_pLogger->AddLog(CNAME, __FUNCTION__, "handling tasks...");
 		//for(CTask* pTask = g_pTaskForce->getNextCompletedTask(); pTask != NULL; pTask = g_pTaskForce->getNextCompletedTask()) {
-		//	g_pLogger->AddLog("main", __FUNCTION__, "found task! gonna handle it...");
+		//	g_pLogger->AddLog(CNAME, __FUNCTION__, "found task! gonna handle it...");
 		//	handleTask(pTask);
 		//}
 		usleep(1000*MAIN_SLEEP_DEFAULT_MS);

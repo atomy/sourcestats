@@ -1,3 +1,6 @@
+#ifndef C_MASTERQUERY_TASK
+#define C_MASTERQUERY_TASK
+
 #include "libtaskforce/CWorker.h"
 #include <string.h>
 #include "CMasterQuery.h"
@@ -8,12 +11,14 @@ public:
 	CMasterQueryTask();
 	~CMasterQueryTask();
 
-	virtual void					run();
+	virtual void						run();
 
 private:
-	void									doStuff();
+	void										doStuff();
 
-	CMasterQuery*					m_pQuery;
+	CMasterQuery*						m_pQuery;
 };
 
-extern IDisplayLogger* g_pLogger;
+extern IDisplayLogger*		g_pLogger;
+
+#endif // C_MASTERQUERY_TASK

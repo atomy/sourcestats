@@ -4,6 +4,8 @@
 #include <string.h>
 #include <errno.h>
 
+#define CNAME "CMasterQuery"
+
 CMasterQuery::CMasterQuery(const char* strHostname, const char* strPort)
 {
 	// TODO, overwrite assign operator!
@@ -35,20 +37,20 @@ bool CMasterQuery::init()
 	hints.ai_socktype = SOCK_DGRAM;
 
 	if((getaddrinfo(m_strMasterServerHostname, m_strMasterServerPort, &hints, &m_pServerinfo)) != 0) {
-		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, "error while getaddrinfo()");
+		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while getaddrinfo()");
 		return false;
 	}
 
 	for(m_pSelectedServ = m_pServerinfo; m_pSelectedServ != NULL; m_pSelectedServ = m_pSelectedServ->ai_next) {
 		if ((m_iSocket = socket(m_pSelectedServ->ai_family, m_pSelectedServ->ai_socktype, m_pSelectedServ->ai_protocol)) == -1) {
-			g_pLogger->AddLog("CMasterQuery", __FUNCTION__, "socket()");
+			g_pLogger->AddLog(CNAME, __FUNCTION__, "socket()");
 			continue;
 		}
 		break;
 	}
 
 	if(m_pSelectedServ == NULL) {
-		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, "failed to bind socket()");
+		g_pLogger->AddLog(CNAME, __FUNCTION__, "failed to bind socket()");
 		return false;
 	}
 
@@ -59,7 +61,7 @@ void CMasterQuery::doRequest()
 {	
 	char log[128];
 	snprintf(log, 128, "lets call retrieveServers() with '%s'", "0.0.0.0:0");
-	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	char addr[64] = {0};
 	for(CServAddr cServAddr = retrieveServers(CServAddr("0.0.0.0:0")); cServAddr.ip1 != 0; cServAddr = retrieveServers(addr))  {
@@ -83,15 +85,15 @@ CServAddr CMasterQuery::retrieveServers(CServAddr serverSeed)
 		iSendLen = SENDBUFFER_SIZE;
 
 	if((m_iSentBytes = sendto(m_iSocket, m_strSendBuffer, iSendLen, 0, m_pSelectedServ->ai_addr, m_pSelectedServ->ai_addrlen)) == -1) {
-		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, "error while sendto()");
+		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while sendto()");
 	}
 
 	snprintf(log, 128, "sent '%d' bytes to '%s'", m_iSentBytes, m_strMasterServerHostname);
-	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	if((m_iRecvBytes = recvfrom(m_iSocket, m_strRecvBuffer, RECVBUF_SIZE, 0, NULL, NULL)) == -1) {
 		snprintf(log, 128, "error while recvfrom() code: '%s'", strerror(errno));
-		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+		g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 	}
 
 	return parseData();
@@ -106,7 +108,7 @@ int CMasterQuery::buildSendBuffer(CServAddr& addr, unsigned char* buf, size_t si
 
 	char log[128];
 	snprintf(log, 128, "building send buffer, using seed: '%s'", seed);
-	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	//const char* seed = "0.0.0.0:0";
 	const char* filter = "\\gamedir\\Dystopia\\napp\\500";
@@ -141,10 +143,10 @@ CServAddr CMasterQuery::parseData()
 	CServAddr lastaddr;
 
 	snprintf(log, 128, "got '%d' bytes from \'???\'", m_iRecvBytes);
-	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	//snprintf(log, 128, "received: '%s'", m_strRecvBuffer);
-	//g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	//g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	while((int)read < m_iRecvBytes) {
 		unsigned short netport;
@@ -164,7 +166,7 @@ CServAddr CMasterQuery::parseData()
 		char buf[64];
 		lastaddr.toString(buf, 64);
 		snprintf(log, 128, "server: '%s'", buf);
-		g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+		g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 		m_pServers.push(new CServAddr(lastaddr));
 	}
@@ -172,7 +174,7 @@ CServAddr CMasterQuery::parseData()
 	m_pServers.pop();
 
 	snprintf(log, 128, "parseData() completed we have '%d' servers now in the list", m_pServers.size());
-	g_pLogger->AddLog("CMasterQuery", __FUNCTION__, log);
+	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
 	return lastaddr;
 }

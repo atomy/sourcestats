@@ -11,6 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CGameQuery.cpp" />
+    <ClCompile Include="CGameQueryHandler.cpp" />
+    <ClCompile Include="CGameQueryTask.cpp" />
     <ClCompile Include="CMasterQuery.cpp" />
     <ClCompile Include="CMasterQueryHandler.cpp" />
     <ClCompile Include="CMasterQueryTask.cpp" />
@@ -18,11 +21,15 @@
     <ClCompile Include="testmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CInfoStruct.h" />
+    <ClInclude Include="CGameQueryHandler.h" />
+    <ClInclude Include="CGameQueryTask.h" />
     <ClInclude Include="CMasterQuery.h" />
     <ClInclude Include="CMasterQueryTask.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="CServAddr.h" />
     <ClInclude Include="CMasterQueryHandler.h" />
+    <ClInclude Include="CGameQuery.h" />
     <ClInclude Include="timediff.h" />
   </ItemGroup>
   <ItemGroup>

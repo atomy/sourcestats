@@ -1,5 +1,5 @@
-#ifndef CMASTER_QUERY_H
-#define CMASTER_QUERY_H
+#ifndef CGAME_QUERY_H
+#define CGAME_QUERY_H
 
 #include "CServAddr.h"
 #include <vector>
@@ -8,38 +8,39 @@
 #include <netdb.h>
 #include "libcursesfrontend/IDisplayLogger.h"
 #include <stack>
+#include "CInfoStruct.h"
 
 #define RECVBUF_SIZE 8192
 #define SENDBUFFER_SIZE 128
 
 using namespace std;
 
-class CMasterQuery
+class CGameQuery
 {
 public:
-	CMasterQuery(const char* strHostname, const char* strPort);
-	~CMasterQuery();
+	CGameQuery(const char* strHostname, const char* strPort);
+	~CGameQuery();
 
 	bool											init();
 
 	void											doRequest();
-	int												buildSendBuffer(CServAddr& addr, unsigned char* buf, size_t size);
-	CServAddr									retrieveServers(CServAddr serverSeed);
+	int												buildSendBuffer(unsigned char* buf, size_t size);
+	void											retrieveServerInfo();
 
 private:
-	CServAddr									parseData();
+	void											parseData();
 
-private:
-	const char*								m_strMasterServerPort;
-	const char*								m_strMasterServerHostname;
+	const char*								m_strQueryTargetHostname;
+	const char*								m_strQueryTargetPort;
 	int												m_iSocket;
 	int												m_iRecvBytes, m_iSentBytes;
 	struct addrinfo						*m_pServerinfo, *m_pSelectedServ;
 	unsigned char							m_strSendBuffer[SENDBUFFER_SIZE];
 	unsigned char							m_strRecvBuffer[RECVBUF_SIZE];
-	stack<CServAddr*>					m_pServers;
+	CInfoStruct								m_infoResult;
+	CServAddr									m_targetServer;
 };
 
 extern IDisplayLogger*			g_pLogger;
 
-#endif // CMASTER_QUERY_H
+#endif // CGAME_QUERY_H

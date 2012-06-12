@@ -18,8 +18,8 @@
 #include "libtaskforce/CDefaultTask.h"
 
 #define STATS_VERSION "0.0.1"
-
 #define MAIN_SLEEP_DEFAULT_MS 500
+#define CNAME "testmain"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ CCursesFrontend* g_pFrontend = new CCursesFrontend();
 bool bShuttingDown = false;
 
 void handleTask(CTask* pTask) {
-	g_pLogger->AddLog("main", __FUNCTION__, "handling completed task!");
+	g_pLogger->AddLog(CNAME, __FUNCTION__, "handling completed task!");
 	delete pTask;
 }
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 	while(pStats->getValue(JOBS_MAX) > pStats->getValue(JOBS_WAITING)) {
 		bool ret = g_pTaskForce->AddTask(new CDefaultTask());
 		if(!ret) {
-			g_pLogger->AddLog("main", __FUNCTION__, "something went wrong during task setup");
+			g_pLogger->AddLog(CNAME, __FUNCTION__, "something went wrong during task setup");
 			break;
 		}
 	}
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 
 	// loop
 	while(1) {
-		//g_pLogger->AddLog("main", __FUNCTION__, "handling tasks...");
+		//g_pLogger->AddLog(CNAME, __FUNCTION__, "handling tasks...");
 		for(CTask* pTask = g_pTaskForce->getNextCompletedTask(); pTask != NULL; pTask = g_pTaskForce->getNextCompletedTask()) {
 			handleTask(pTask);
 		}
