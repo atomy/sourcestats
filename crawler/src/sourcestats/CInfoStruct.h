@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string>
+#include "CServAddr.h"
 
 using namespace std;
 
@@ -52,6 +53,12 @@ public:
 		return m_strGameDesc.c_str();
 	}
 
+	void								toString(char* buf, size_t size) {
+		char strAddr[64];		
+		m_addr.toString(strAddr, 64);
+		snprintf(buf, size, "%s name: '%s' map: '%s' %hhu/%hhu", strAddr, m_sServerName.c_str(), m_strMap.c_str(), playercount, maxplayers);
+	}
+
 
 public:
 	unsigned char				type;
@@ -64,6 +71,7 @@ public:
 	unsigned char				os;
 	unsigned char				password;
 	unsigned char				secure;
+	CServAddr						m_addr;
 
 private:
 	string							m_sServerName;

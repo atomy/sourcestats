@@ -13,6 +13,8 @@ public:
 
 	virtual void						run();
 
+	CGameQuery*							getQuery();
+
 private:
 	CGameQuery*							m_pQuery;
 

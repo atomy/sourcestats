@@ -42,10 +42,15 @@ void CGameQueryTask::run()
 	if(m_pQuery->init())
 		m_pQuery->doRequest();
 	else
-		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while CMasterQuery::init()");
+		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while CGameQuery::init()");
 
 	g_pLogger->AddLog(CNAME, __FUNCTION__, "done with stuff!");
 
 	// callback
 	OnTaskCompleted();
+}
+
+CGameQuery* CGameQueryTask::getQuery()
+{
+	return m_pQuery;
 }

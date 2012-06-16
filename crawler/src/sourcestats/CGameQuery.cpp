@@ -9,8 +9,8 @@
 CGameQuery::CGameQuery(const char* strHostname, const char* strPort)
 {
 	// TODO, wtf is this?
-	m_strQueryTargetPort = strHostname;
-	m_strQueryTargetHostname = strPort;
+	m_strQueryTargetPort = strPort;
+	m_strQueryTargetHostname = strHostname;
 	m_targetServer.setIp(strHostname);
 	m_targetServer.setPort(strPort);
 }
@@ -31,7 +31,7 @@ bool CGameQuery::init()
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 
-	if((getaddrinfo(m_strQueryTargetPort, m_strQueryTargetHostname, &hints, &m_pServerinfo)) != 0) {
+	if((getaddrinfo(m_strQueryTargetHostname, m_strQueryTargetPort, &hints, &m_pServerinfo)) != 0) {
 		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while getaddrinfo()");
 		return false;
 	}
@@ -132,6 +132,8 @@ void CGameQuery::parseData()
 	snprintf(log, 128, "got '%d' bytes from \'???\'", m_iRecvBytes);
 	g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 
+	m_infoResult.m_addr = m_targetServer;
+
 	char strBuf[256];
 
 	// type, byte
@@ -220,4 +222,9 @@ void CGameQuery::parseData()
 
 	//snprintf(log, 128, "gameDesc: '%s'", m_infoResult.getGameDesc());
 	//g_pLogger->AddLog(CNAME, __FUNCTION__, log);
+}
+
+CInfoStruct& CGameQuery::getInfoStruct()
+{
+	return m_infoResult;
 }

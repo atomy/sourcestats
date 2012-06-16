@@ -37,7 +37,9 @@ bool CMasterQuery::init()
 	hints.ai_socktype = SOCK_DGRAM;
 
 	if((getaddrinfo(m_strMasterServerHostname, m_strMasterServerPort, &hints, &m_pServerinfo)) != 0) {
-		g_pLogger->AddLog(CNAME, __FUNCTION__, "error while getaddrinfo()");
+		char log[128];
+		snprintf(log, 128, "error while getaddrinfo() host: '%s' port: '%s'", m_strMasterServerHostname, m_strMasterServerPort);
+		g_pLogger->AddLog(CNAME, __FUNCTION__, log);
 		return false;
 	}
 

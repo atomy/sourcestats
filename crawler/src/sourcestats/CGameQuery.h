@@ -26,6 +26,7 @@ public:
 	void											doRequest();
 	int												buildSendBuffer(unsigned char* buf, size_t size);
 	void											retrieveServerInfo();
+	CInfoStruct&							getInfoStruct();
 
 private:
 	void											parseData();
