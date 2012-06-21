@@ -20,6 +20,7 @@
 #include "CMasterQueryHandler.h"
 #include "CGameQueryTask.h"
 #include "CGameQueryHandler.h"
+#include "CDBProcessor.h"
 
 #define STATS_VERSION "0.0.1"
 
@@ -45,6 +46,9 @@ CCursesFrontend* g_pFrontend = new CCursesFrontend();
 CMasterQueryHandler* g_pMasterHandler = new CMasterQueryHandler();
 CGameQueryHandler* g_pGameHandler = new CGameQueryHandler();
 
+// our processor for db stuff
+CDBProcessor* g_pDBProcessor = new CDBProcessor();
+
 bool bShuttingDown = false;
 
 //void handleTask(CTask* pTask) {
@@ -59,17 +63,20 @@ void cleanup() {
 	delete g_pTaskForce;
 	delete g_pMasterHandler;
 	delete g_pGameHandler;
+	delete g_pDBProcessor;
 
 	g_pLogger = NULL;
 	g_pStats = NULL;
 	g_pFrontend = NULL;
 	g_pTaskForce = NULL;
+	g_pDBProcessor = NULL;
 }
 
 // try to exit and cleanup, on 2nd call exit now
 void stop(int signum) {
 	g_pFrontend->shutdown();
 	g_pTaskForce->shutdown();
+	g_pDBProcessor->shutdown();
 
 	if(bShuttingDown) {
 		cout << endl << "stop() received '" << strsignal(signum) << "' again, hard shutdown..." << endl;
@@ -81,6 +88,8 @@ void stop(int signum) {
 
 	pthread_join(g_pTaskForce->getThread(), NULL);
 	pthread_join(g_pFrontend->getThread(), NULL);
+	pthread_join(g_pDBProcessor->getThread(), NULL);
+	
 
 	cleanup();
 	cout << "shutdown completed." << endl;
@@ -98,6 +107,14 @@ int main(int argc, char **argv) {
 	// set stats default value
 	g_pStats->changeValueBy(JOBS_MAX, g_iMaxTasks);
 	g_pStats->changeValueBy(THREADS_MAX, g_iMaxThreads);
+
+	/////////////////////////////////////////////////////////
+	///////////////// DBPROCESSOR - START ///////////////////
+
+	g_pDBProcessor->start();
+
+	///////////////// DBPROCESSOR - END /////////////////////
+	/////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////
 	///////////////// FRONTEND - START //////////////////////

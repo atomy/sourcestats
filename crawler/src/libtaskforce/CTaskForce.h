@@ -26,10 +26,8 @@ public:
 
 	// add a task to be run
 	virtual	bool												AddTask(CTask*);
-
-	virtual void												_init();
+	
 	virtual bool												start();
-	virtual void												run();
 	virtual void												update(long mtime);
 
 	virtual void												setStats(IDisplayStats* pStats);
@@ -48,6 +46,10 @@ public:
 	void																OnTaskCompleted(CTask* pTask);	
 
 	void																InstallEventHandler(ITaskForceEventHandler* pHandler);
+
+private:
+	virtual void												_init();
+	virtual void												run();
 
 private:
   CTaskPool*													m_pTaskPool;
